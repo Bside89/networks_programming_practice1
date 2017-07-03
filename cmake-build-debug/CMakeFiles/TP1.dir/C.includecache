@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/main.c
+ctype.h
+-
+stdio.h
+-
+stdlib.h
+-
+unistd.h
+-
+
