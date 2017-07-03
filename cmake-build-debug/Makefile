@@ -150,6 +150,33 @@ main.c.s:
 	$(MAKE) -f CMakeFiles/TP1.dir/build.make CMakeFiles/TP1.dir/main.c.s
 .PHONY : main.c.s
 
+tp1opt.o: tp1opt.c.o
+
+.PHONY : tp1opt.o
+
+# target to build an object file
+tp1opt.c.o:
+	$(MAKE) -f CMakeFiles/TP1.dir/build.make CMakeFiles/TP1.dir/tp1opt.c.o
+.PHONY : tp1opt.c.o
+
+tp1opt.i: tp1opt.c.i
+
+.PHONY : tp1opt.i
+
+# target to preprocess a source file
+tp1opt.c.i:
+	$(MAKE) -f CMakeFiles/TP1.dir/build.make CMakeFiles/TP1.dir/tp1opt.c.i
+.PHONY : tp1opt.c.i
+
+tp1opt.s: tp1opt.c.s
+
+.PHONY : tp1opt.s
+
+# target to generate assembly for a file
+tp1opt.c.s:
+	$(MAKE) -f CMakeFiles/TP1.dir/build.make CMakeFiles/TP1.dir/tp1opt.c.s
+.PHONY : tp1opt.c.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -162,6 +189,9 @@ help:
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... tp1opt.o"
+	@echo "... tp1opt.i"
+	@echo "... tp1opt.s"
 .PHONY : help
 
 
