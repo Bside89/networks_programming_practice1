@@ -22,9 +22,9 @@ void set_options(int argc, char **argv, struct netconfigs* netconf) {
     int c, index;
 
     // Defaults
-    netconf->chat_mode_flag = GROUP_MODE_SET;
-    netconf->parallelism_mode_flag = MULTIPROCESSING_MODE;
-    netconf->transport_protocol_mode = PROT_MODE_UDP;
+    netconf->chat_mode_opt = GROUP_MODE_SET;
+    netconf->parallelism_mode_opt = MULTIPROCESSING_MODE;
+    netconf->transport_protocol_opt = PROT_MODE_UDP;
 
     netconf->cm_set = netconf->pm_set = netconf->tp_set = netconf->po_set = 0;
 
@@ -34,25 +34,25 @@ void set_options(int argc, char **argv, struct netconfigs* netconf) {
         switch (c) {
             case OPT_UNIQUE:
                 check_vality_options(netconf->cm_set);
-                netconf->chat_mode_flag = UNIQUE_MODE_SET;
+                netconf->chat_mode_opt = UNIQUE_MODE_SET;
                 printf("%c is used.\n", OPT_UNIQUE);
                 netconf->cm_set = 1;
                 break;
             case OPT_GROUP:
                 check_vality_options(netconf->cm_set);
-                netconf->chat_mode_flag = GROUP_MODE_SET;
+                netconf->chat_mode_opt = GROUP_MODE_SET;
                 printf("%c is used.\n", OPT_GROUP);
                 netconf->cm_set = 1;
                 break;
             case OPT_FORK:
                 check_vality_options(netconf->pm_set);
-                netconf->parallelism_mode_flag = MULTIPROCESSING_MODE;
+                netconf->parallelism_mode_opt = MULTIPROCESSING_MODE;
                 printf("%c is used.\n", OPT_FORK);
                 netconf->pm_set = 1;
                 break;
             case OPT_THREAD:
                 check_vality_options(netconf->pm_set);
-                netconf->parallelism_mode_flag = MULTITHREADING_MODE;
+                netconf->parallelism_mode_opt = MULTITHREADING_MODE;
                 printf("%c is used.\n", OPT_THREAD);
                 netconf->pm_set = 1;
                 break;
@@ -67,7 +67,7 @@ void set_options(int argc, char **argv, struct netconfigs* netconf) {
                             PROT_MODE_TCP, PROT_MODE_UDP);
                     exit(EXIT_FAILURE);
                 }
-                netconf->transport_protocol_mode = optarg;
+                netconf->transport_protocol_opt = optarg;
                 netconf->tp_set = 1;
                 break;
             case OPT_PORT:

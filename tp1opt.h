@@ -30,11 +30,11 @@
 
 
 struct netconfigs {
-    int chat_mode_flag;
+    int chat_mode_opt;
     int cm_set;
-    int parallelism_mode_flag;
+    int parallelism_mode_opt;
     int pm_set;
-    char* transport_protocol_mode;
+    char* transport_protocol_opt;
     int tp_set;
     int connection_port;
     int po_set;
