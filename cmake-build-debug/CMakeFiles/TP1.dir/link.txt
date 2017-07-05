@@ -1,1 +1,1 @@
-/usr/bin/cc  -g   CMakeFiles/TP1.dir/main.c.o CMakeFiles/TP1.dir/tp1opt.c.o  -o ../TP1 
+/usr/bin/cc  -g   CMakeFiles/TP1.dir/server.c.o CMakeFiles/TP1.dir/tp1opt.c.o  -o ../TP1 

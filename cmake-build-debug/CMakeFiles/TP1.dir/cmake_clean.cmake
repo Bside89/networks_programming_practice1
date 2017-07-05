@@ -1,5 +1,5 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/TP1.dir/main.c.o"
+  "CMakeFiles/TP1.dir/server.c.o"
   "CMakeFiles/TP1.dir/tp1opt.c.o"
   "../TP1.pdb"
   "../TP1"

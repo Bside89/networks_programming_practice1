@@ -9,7 +9,8 @@
 
 // Options (getopt)
 
-#define GETOPT_OPTIONS "ugftp:m:"
+#define GETOPT_OPTIONS_SERVER "ugftp:m:l:"
+#define GETOPT_OPTIONS_CLIENT "ugftp:m:s:"
 
 #define OPT_UNIQUE 'u'          // Unique mode
 #define OPT_GROUP 'g'           // Group mode (default)
@@ -23,25 +24,39 @@
 
 #define OPT_PORT 'p'            // Port used (required)
 
+#define OPT_MAX_CONNECTIONS 'l' // Max qty. connections (required) (SERVER ONLY)
+
+#define OPT_INTERRUPTION 's'    // Set interruption for send messages (CLIENT ONLY),
+                                // which can be:
+#define INT_MODE_ENTER "enter"      // Enter key
+#define INT_MODE_INTER "inter"      // Interuption key defined
+
 #define UNIQUE_MODE_SET 0
-#define GROUP_MODE_SET 1        // Default
-#define MULTIPROCESSING_MODE 0  // Default
-#define MULTITHREADING_MODE 1
+#define GROUP_MODE_SET 1            // Default
+#define MULTIPROCESSING_MODE_SET 0  // Default
+#define MULTITHREADING_MODE_SET 1
 
 
+/* Struct containing infos about options chosen by user at startup
+ * */
 struct netconfigs {
-    int chat_mode_opt;
-    int cm_set;
-    int parallelism_mode_opt;
-    int pm_set;
-    char* transport_protocol_opt;
-    int tp_set;
-    int connection_port;
-    int po_set;
+    int is_server;                  // Flag indicating server or client app;
+    int chat_mode_opt;              // Chat mode (UNIQUE or GROUP);
+    int cm_set;                     // Set flag (avoid double configs);
+    int parallelism_mode_opt;       // Par. mode (MULTIPROCESS or MULTITHREADING);
+    int pm_set;                     // Set flag;
+    char* transport_protocol_opt;   // Transport protocl used (TCP or UDP);
+    int tp_set;                     // Set flag;
+    int connection_port;            // Port number used;
+    int po_set;                     // Set flag;
+    int max_connections_opt;        // Max number of connections accepted (S.O.);
+    int mc_set;                     // Set flag;
+    char* interr_opt;               // Interruption for sending messages (C.O.);
+    int io_set;                     // Set flag.
 };
 
 
-void set_options(int argc, char **argv, struct netconfigs* netconf);
+void set_options(int argc, char **argv, int is_server, struct netconfigs* netconf);
 
 void check_vality_options(int mode);
 

@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/main.c
+/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/server.c
 stdlib.h
 -
 tp1opt.h
