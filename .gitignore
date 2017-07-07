@@ -1,6 +1,7 @@
 /cmake-build-debug/
 /bin/
 /doc/
+/tmp/
 .directory
 .idea/TP1.iml
 .idea/misc.xml

@@ -32,7 +32,7 @@ void set_options(int argc, char **argv, int is_server, struct netconfigs* netcon
     netconf->interr_opt = INT_MODE_ENTER;
 
     netconf->cm_set = netconf->pm_set = netconf->tp_set = netconf->po_set
-            = netconf->mc_set = 0;
+            = netconf->mc_set = netconf->io_set = 0;
 
     opterr = 0;
 
@@ -68,8 +68,9 @@ void set_options(int argc, char **argv, int is_server, struct netconfigs* netcon
                     || strcmp(optarg, PROT_MODE_UDP) == 0)
                     printf("%s is used.\n", optarg);
                 else {
-                    fprintf(stderr, "Invalid option: %s or %s must be used.\n",
-                            PROT_MODE_TCP, PROT_MODE_UDP);
+                    fprintf(stderr, "Invalid option: \"%s\" or \"%s\" must be used"
+                                    " with -%c. Exiting.\n",
+                            PROT_MODE_TCP, PROT_MODE_UDP, OPT_PROTOCOL_MODE);
                     exit(EXIT_FAILURE);
                 }
                 netconf->transport_protocol_opt = optarg;
@@ -82,40 +83,56 @@ void set_options(int argc, char **argv, int is_server, struct netconfigs* netcon
                 netconf->po_set = 1;
                 break;
             case OPT_MAX_CONNECTIONS:   // (S.O.)
-                check_vality_options(netconf->mc_set);
-                int mc = atoi(optarg);
-                if (mc <= 0) {
-                    fprintf(stderr, "Max connections must be 1 or bigger.");
-                    exit(EXIT_FAILURE);
+                if (netconf->is_server) {
+                    check_vality_options(netconf->mc_set);
+                    int mc = atoi(optarg);
+                    if (mc <= 0) {
+                        fprintf(stderr, "Max connections must be 1 or bigger. "
+                                "Exiting.");
+                        exit(EXIT_FAILURE);
+                    }
+                    netconf->max_connections_opt = mc;
+                    printf("Max connections: %d.\n", netconf->max_connections_opt);
+                    netconf->mc_set = 1;
                 }
-                netconf->max_connections_opt = mc;
-                printf("Max connections: %d.\n", netconf->max_connections_opt);
-                netconf->mc_set = 1;
+                break;
             case OPT_INTERRUPTION:      // (C.O.)
-                check_vality_options(netconf->io_set);
-                if (strcmp(optarg, INT_MODE_ENTER) == 0
-                    || strcmp(optarg, INT_MODE_INTER) == 0)
-                    printf("Interruption: %s is used.\n", optarg);
-                netconf->interr_opt = optarg;
-                netconf->io_set = 1;
+                if (!netconf->is_server) {
+                    check_vality_options(netconf->io_set);
+                    if (strcmp(optarg, INT_MODE_ENTER) == 0
+                        || strcmp(optarg, INT_MODE_INTER) == 0)
+                        printf("Interruption: \"%s\" is used.\n", optarg);
+                    else {
+                        fprintf(stderr, "Invalid option: \"%s\" or \"%s\" must be "
+                                        "used with -%c. Exiting.\n",
+                                INT_MODE_ENTER, INT_MODE_INTER, OPT_INTERRUPTION);
+                        exit(EXIT_FAILURE);
+                    }
+                    netconf->interr_opt = optarg;
+                    netconf->io_set = 1;
+                }
+                break;
             case '?':
                 if (optopt == OPT_PROTOCOL_MODE)
-                    fprintf(stderr, "Option -%c requires an argument (%s or %s).\n",
+                    fprintf(stderr, "Option -%c requires an argument (%s or %s).",
                             optopt, PROT_MODE_TCP, PROT_MODE_UDP);
                 else if (isprint (optopt))
-                    fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+                    fprintf(stderr, "Unknown option `-%c'.", optopt);
                 else
-                    fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
+                    fprintf(stderr, "Unknown option character `\\x%x'.", optopt);
+                fprintf(stderr, " Exiting.\n");
                 exit(EXIT_FAILURE);
             default:
                 exit(EXIT_FAILURE);
         }
     }
     if (!netconf->po_set) {
-        fprintf(stderr, "Port number is required.\n");
+        fprintf(stderr, "Port number (option -%c) is required. Exiting.\n",
+                OPT_PORT);
         exit(EXIT_FAILURE);
-    } else if (!netconf->mc_set && netconf->is_server) {
-        fprintf(stderr, "Max connections is required.\n");
+    } else if (netconf->is_server && !netconf->mc_set) {
+        fprintf(stderr, "Max connections (option -%c) is required for server. "
+                        "Exiting.\n", OPT_MAX_CONNECTIONS);
         exit(EXIT_FAILURE);
     }
     for (index = optind; index < argc; index++)
