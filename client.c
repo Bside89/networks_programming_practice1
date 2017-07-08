@@ -1,30 +1,17 @@
-#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
 #include "tp1opt.h"
 
 
-int main(int argc, char *argv[]) {
+int main(int argc, char** argv) {
 
-    struct netconfigs options;
-    int sockfd;
-    int portno;
-    char* retvalue;
-    char buffer[256];
-    struct hostent *server;
-    struct sockaddr_in serv_addr;
+    struct netconfigs options;              // Struct for store program's configs
 
-    set_options(argc, argv, 0, &options);
-
-    // All code here
-
-    //close(sockfd);
+    // Get all configs by user
+    if (set_options(argc, argv, 0, &options) < 0) {
+        fprintf(stderr, "Exiting.\n");
+        exit(EXIT_FAILURE);
+    }
 
     return EXIT_SUCCESS;
 }

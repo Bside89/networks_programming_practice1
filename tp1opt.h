@@ -10,7 +10,7 @@
 // Options (getopt)
 
 #define GETOPT_OPTIONS_SERVER "ugftp:m:l:"
-#define GETOPT_OPTIONS_CLIENT "ugftp:m:s:"
+#define GETOPT_OPTIONS_CLIENT "ugftm:s:"
 
 #define OPT_UNIQUE 'u'              // Unique mode;
 #define OPT_GROUP 'g'               // Group mode (default);
@@ -22,7 +22,7 @@
 #define PROT_MODE_UDP "udp"             // UDP;
 #define PROT_MODE_TCP "tcp"             // TCP;
 
-#define OPT_PORT 'p'                // Port used (required);
+#define OPT_PORT 'p'                // Port used (required) (SERVER ONLY);
 
 #define OPT_MAX_CONNECTIONS 'l'     // Max qty. connections (required) (SERVER ONLY);
 
@@ -45,20 +45,19 @@ struct netconfigs {
     int cm_set;                     // Set flag (avoid double configs);
     int parallelism_mode_opt;       // Par. mode (MULTIPROCESS or MULTITHREADING);
     int pm_set;                     // Set flag;
-    char* transport_protocol_opt;   // Transport protocl used (TCP or UDP);
+    int transport_protocol_opt;     // Transport protocl used (TCP or UDP);
     int tp_set;                     // Set flag;
     int connection_port;            // Port number used;
     int po_set;                     // Set flag;
     int max_connections_opt;        // Max number of connections accepted (S.O.);
     int mc_set;                     // Set flag;
     char* interr_opt;               // Interruption for sending messages (C.O.);
-    int io_set;                     // Set flag.
+    int io_set;                     // Set flag;
+    char* ip_address;               // IPv4 address (C.O.);
 };
 
 
-void set_options(int argc, char **argv, int is_server, struct netconfigs* netconf);
-
-void check_vality_options(int mode);
+int set_options(int argc, char **argv, int is_server, struct netconfigs* netconf);
 
 
 #endif //TP1_TP1OPT_H
