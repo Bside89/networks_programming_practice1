@@ -5,20 +5,33 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <signal.h>
 #include "tp1opt.h"
 
 #define LISTEN_ENQ 5
 
+
+int sockfd, newsockfd;
+
+
+void sighandler(int signum) {
+    printf("CTRL+C pressed\n");
+    close(newsockfd);
+    close(sockfd);
+    exit(0);
+}
+
+
 int main(int argc, char** argv) {
 
-    int sockfd;
-    int newsockfd;
     int clilen;
     char buffer[256];
 
     struct sockaddr_in serv_addr;
     struct sockaddr_in cli_addr;
     struct netconfigs options;      // Struct for store program's configs
+
+    signal(SIGINT, sighandler); // Signal handler for CTRL+C
 
     // Get all configs by user
     if (set_options(argc, argv, 1, &options) < 0) {

@@ -1,0 +1,4 @@
+/opt/clion/bin/cmake/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1"
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug

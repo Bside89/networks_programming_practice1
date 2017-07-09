@@ -1,0 +1,1 @@
+/usr/bin/cc  -g   CMakeFiles/server.dir/server.c.o CMakeFiles/server.dir/tp1opt.c.o  -o ../bin/server 
