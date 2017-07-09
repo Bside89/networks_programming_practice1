@@ -6,17 +6,29 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <signal.h>
 #include "tp1opt.h"
+
+
+int sockfd;
+
+
+void sighandler(int signum) {
+    printf("\nCTRL+C pressed\n");
+    exit(0);
+}
+
 
 int main(int argc, char** argv) {
 
-    int sockfd;
     char* retvalue;
     char buffer[256];
 
     struct hostent *server;
     struct sockaddr_in serv_addr;
     struct netconfigs options;      // Struct for store program's configs
+
+    signal(SIGINT, sighandler); // Signal handler for CTRL+C
 
     // Get all configs by user
     if (set_options(argc, argv, 0, &options) < 0) {
@@ -36,10 +48,10 @@ int main(int argc, char** argv) {
         exit(1);
     }
 
+    // Fill the server (serv_addr) struct
     memset((char*) &serv_addr, 0, sizeof(serv_addr)); // Zero the struct
     memcpy((char*) &serv_addr.sin_addr.s_addr, server->h_addr,
            (size_t) server->h_length);
-
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons((uint16_t) options.connection_port);
 
