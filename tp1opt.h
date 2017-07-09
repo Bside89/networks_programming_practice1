@@ -42,17 +42,11 @@
 struct netconfigs {
     int is_server;                  // Flag indicating server or client app;
     int chat_mode_opt;              // Chat mode (UNIQUE or GROUP);
-    int cm_set;                     // Set flag (avoid double configs);
     int parallelism_mode_opt;       // Par. mode (MULTIPROCESS or MULTITHREADING);
-    int pm_set;                     // Set flag;
     int transport_protocol_opt;     // Transport protocl used (TCP or UDP);
-    int tp_set;                     // Set flag;
     int connection_port;            // Port number used;
-    int po_set;                     // Set flag;
     int max_connections_opt;        // Max number of connections accepted (S.O.);
-    int mc_set;                     // Set flag;
     char* interr_opt;               // Interruption for sending messages (C.O.);
-    int io_set;                     // Set flag;
     char* ip_address;               // IPv4 address (C.O.);
 };
 

@@ -20,6 +20,7 @@ int set_options(int argc, char **argv, int is_server, struct netconfigs* netconf
 
     int c, qty, index;
     const char* options;
+    short cm_set = 0, pm_set = 0, tp_set = 0, cp_set = 0, mc_set = 0, io_set = 0;
 
     netconf->is_server = is_server;
 
@@ -31,39 +32,36 @@ int set_options(int argc, char **argv, int is_server, struct netconfigs* netconf
     netconf->transport_protocol_opt = SOCK_STREAM; // TCP
     netconf->interr_opt = INT_MODE_ENTER;
 
-    netconf->cm_set = netconf->pm_set = netconf->tp_set = netconf->po_set
-            = netconf->mc_set = netconf->io_set = 0;
-
     opterr = 0;
 
     while ((c = getopt (argc, argv, options)) != -1) {
         switch (c) {
             case OPT_UNIQUE:
-                if (!is_option_valid(netconf->cm_set))
+                if (!is_option_valid(cm_set))
                     return -1;
                 netconf->chat_mode_opt = UNIQUE_MODE_SET;
-                netconf->cm_set = 1;
+                cm_set = 1;
                 break;
             case OPT_GROUP:
-                if (!is_option_valid(netconf->cm_set))
+                if (!is_option_valid(cm_set))
                     return -1;
                 netconf->chat_mode_opt = GROUP_MODE_SET;
-                netconf->cm_set = 1;
+                cm_set = 1;
                 break;
             case OPT_FORK:
-                if (!is_option_valid(netconf->pm_set))
+                if (!is_option_valid(pm_set))
                     return -1;
                 netconf->parallelism_mode_opt = MULTIPROCESSING_MODE_SET;
-                netconf->pm_set = 1;
+                pm_set = 1;
                 break;
             case OPT_THREAD:
-                if (!is_option_valid(netconf->pm_set))
+                if (!is_option_valid(pm_set))
                     return -1;
                 netconf->parallelism_mode_opt = MULTITHREADING_MODE_SET;
-                netconf->pm_set = 1;
+                pm_set = 1;
                 break;
             case OPT_PROTOCOL_MODE:
-                if (!is_option_valid(netconf->tp_set))
+                if (!is_option_valid(tp_set))
                     return -1;
                 if (strcmp(optarg, PROT_MODE_TCP) == 0) {
                     netconf->transport_protocol_opt = SOCK_STREAM;  // TCP
@@ -75,16 +73,16 @@ int set_options(int argc, char **argv, int is_server, struct netconfigs* netconf
                             PROT_MODE_TCP, PROT_MODE_UDP, OPT_PROTOCOL_MODE);
                     return -1;
                 }
-                netconf->tp_set = 1;
+                tp_set = 1;
                 break;
             case OPT_PORT:              // (S.O.)
-                if (!is_option_valid(netconf->po_set))
+                if (!is_option_valid(cp_set))
                     return -1;
                 netconf->connection_port = atoi(optarg);
-                netconf->po_set = 1;
+                cp_set = 1;
                 break;
             case OPT_MAX_CONNECTIONS:   // (S.O.)
-                if (!is_option_valid(netconf->mc_set))
+                if (!is_option_valid(mc_set))
                     return -1;
                 int mc = atoi(optarg);
                 if (mc <= 0) {
@@ -92,10 +90,10 @@ int set_options(int argc, char **argv, int is_server, struct netconfigs* netconf
                     return -1;
                 }
                 netconf->max_connections_opt = mc;
-                netconf->mc_set = 1;
+                mc_set = 1;
                 break;
             case OPT_INTERRUPTION:      // (C.O.)
-                if (!is_option_valid(netconf->io_set))
+                if (!is_option_valid(io_set))
                     return -1;
                 if (strcmp(optarg, INT_MODE_ENTER) != 0
                     && strcmp(optarg, INT_MODE_INTER) != 0) {
@@ -105,7 +103,7 @@ int set_options(int argc, char **argv, int is_server, struct netconfigs* netconf
                     return -1;
                 }
                 netconf->interr_opt = optarg;
-                netconf->io_set = 1;
+                io_set = 1;
                 break;
             case '?':
                 if (isprint (optopt))
@@ -118,11 +116,11 @@ int set_options(int argc, char **argv, int is_server, struct netconfigs* netconf
         }
     }
     if (netconf->is_server) {
-        if (!netconf->po_set) {
+        if (!cp_set) {
             fprintf(stderr, "Port number (option '-%c') is required.\n",
                     OPT_PORT);
             return -1;
-        } else if (!netconf->mc_set) {
+        } else if (!mc_set) {
             fprintf(stderr, "Max connections (option '-%c') is required for server.\n",
                     OPT_MAX_CONNECTIONS);
             return -1;
@@ -138,7 +136,6 @@ int set_options(int argc, char **argv, int is_server, struct netconfigs* netconf
         }
         netconf->ip_address = argv[argc - 2];
         netconf->connection_port = atoi(argv[argc - 1]);
-        netconf->po_set = 1;
     } else {
         if (qty != 0) {
             fprintf(stderr, "Usage: %s [OPTIONS]\n", argv[0]);
