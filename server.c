@@ -91,19 +91,28 @@ int main(int argc, char** argv) {
 
 void* communication_handler(void* arg) {
 
+    ssize_t rd, wt;
     int sckt = *((int*) arg);
     char buffer[BUFFER_MAX_SIZE];
 
     while (1) {
         memset(buffer, 0, sizeof(buffer));
-        if (read(sckt, buffer, sizeof(buffer)) < 0) {
+        rd = read(sckt, buffer, sizeof(buffer));
+        if (rd < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
             exit(1);
+        } else if (rd == 0) {
+            puts("ALERT: Closing a connection.");
+            break;
         }
         printf("Here is the message: %s", buffer);
-        if (write(sckt, "Recebi a mensagem!", 18) < 0) {
+        wt = write(sckt, "Recebi a mensagem!", 18);
+        if (wt < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
             exit(1);
+        } else if (wt == 0) {
+            puts("ALERT: Closing a connection.");
+            break;
         }
     }
     close(sckt);

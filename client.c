@@ -89,14 +89,19 @@ void sighandler(int signum) {
 
 void* cli_reader(void *arg) {
 
+    ssize_t rd;
     int sckt = *((int*) arg);
     char buffer[BUFFER_MAX_SIZE];
 
     while (1) {
         memset(buffer, 0, sizeof(buffer));
-        if (read(sckt, buffer, sizeof(buffer) - 1) < 0) {
+        rd = read(sckt, buffer, sizeof(buffer) - 1);
+        if (rd  < 0) {
             fprintf(stderr, "ERROR ON READ: %s\n", strerror(errno));
             exit(1);
+        } else if (rd == 0) {
+            puts("Closing connection");
+            break;
         }
         printf("Server >> %s\n", buffer);
     }
@@ -106,21 +111,26 @@ void* cli_reader(void *arg) {
 
 void* cli_writer(void *arg) {
 
+    ssize_t wt;
     int sckt = *((int*) arg);
     char* retvalue;
     char buffer[BUFFER_MAX_SIZE];
 
+    puts("Digite suas mensagens abaixo:");
     while (1) {
 
-        printf("Client >> ");
         memset(buffer, 0, sizeof(buffer));
         do {
             retvalue = fgets(buffer, sizeof(buffer), stdin);
         } while (retvalue == NULL);
 
-        if (write(sckt, buffer, sizeof(buffer)) < 0) {
+        wt = write(sckt, buffer, sizeof(buffer));
+        if (wt < 0) {
             fprintf(stderr, "ERROR ON WRITE: %s\n", strerror(errno));
             exit(1);
+        } else if (wt == 0) {
+            puts("Closing connection");
+            break;
         }
     }
     return NULL;

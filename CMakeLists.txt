@@ -12,5 +12,6 @@ set(GCC_PTHREAD_FLAG "-lpthread")
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_PTHREAD_FLAG}")
 SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_PTHREAD_FLAG}")
 
-add_executable(client client.c tp1opt.c tp1opt.h)
+add_executable(client1 client.c tp1opt.c tp1opt.h)
+add_executable(client2 client.c tp1opt.c tp1opt.h)
 add_executable(server server.c tp1opt.c tp1opt.h)
