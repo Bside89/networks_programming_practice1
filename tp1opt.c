@@ -88,6 +88,10 @@ int set_options(int argc, char **argv, int is_server, struct netconfigs* netconf
                 if (mc <= 0) {
                     fprintf(stderr, "Max connections must be 1 or bigger.\n");
                     return -1;
+                } else if (mc > 5) {
+                    fprintf(stderr, "Max connections must not be too big "
+                            "(higher than 5).\n");
+                    return -1;
                 }
                 netconf->max_connections_opt = mc;
                 mc_set = 1;

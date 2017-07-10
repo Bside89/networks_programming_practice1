@@ -9,7 +9,6 @@
 #include <pthread.h>
 #include "tp1opt.h"
 
-#define LISTEN_ENQ 5
 #define BUFFER_MAX_SIZE 256
 
 
@@ -28,22 +27,22 @@ struct srv_pthread_args {
 
 int main(int argc, char** argv) {
 
-    pid_t pid;
-    pthread_t threads[LISTEN_ENQ];
-    int clilen, i = 0;
-
-    struct sockaddr_in serv_addr;
-    struct sockaddr_in cli_addr;
-    struct netconfigs options;      // Struct for store program's configs
-    struct srv_pthread_args t_args;
-
-    signal(SIGINT, sighandler); // Signal handler for CTRL+C
+    struct netconfigs options; // Struct for store program's configs
 
     // Get all configs by user
     if (set_options(argc, argv, 1, &options) < 0) {
         fprintf(stderr, "Exiting.\n");
         exit(EXIT_FAILURE);
     }
+
+    pid_t pid;
+    pthread_t threads[options.max_connections_opt];
+    int clilen, i = 0;
+    struct sockaddr_in serv_addr;
+    struct sockaddr_in cli_addr;
+    struct srv_pthread_args t_args;
+
+    signal(SIGINT, sighandler); // Signal handler for CTRL+C
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
@@ -61,11 +60,12 @@ int main(int argc, char** argv) {
         exit(1);
     }
 
-    listen(sockfd, LISTEN_ENQ);
+    listen(sockfd, options.max_connections_opt);
     clilen = sizeof(cli_addr);
 
     while (1) {
-        newsockfd = accept(sockfd, (struct sockaddr*) &cli_addr, (unsigned int*) &clilen);
+        newsockfd = accept(sockfd, (struct sockaddr*) &cli_addr,
+                           (unsigned int*) &clilen);
         if (newsockfd < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
             exit(1);
@@ -82,8 +82,7 @@ int main(int argc, char** argv) {
             }
             if (pid == 0) { // Child process
                 communication_handler((void*) &t_args);
-                close(sockfd);
-                return 0;
+                break;
             } else {
                 close(newsockfd);
             }
@@ -95,7 +94,8 @@ int main(int argc, char** argv) {
             }
         }
     }
-
+    close(sockfd);
+    return 0;
 }
 
 
