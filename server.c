@@ -7,9 +7,11 @@
 #include <netinet/in.h>
 #include <signal.h>
 #include <pthread.h>
+#include <arpa/inet.h>
 #include "tp1opt.h"
 
 #define BUFFER_MAX_SIZE 256
+#define ADDR_STR_MAX_SIZE 24 // IP and Port used on print
 
 
 int tcp_sockfd, tcp_newsockfd, udp_sockfd;
@@ -22,6 +24,7 @@ void* communication_handler(void* arg);
 
 struct srv_pthread_args {
     int sockfd;
+    struct sockaddr_in cli_addr;
 };
 
 
@@ -74,6 +77,7 @@ int main(int argc, char** argv) {
 
         // Fill struct passed as argument in handlers
         t_args.sockfd = tcp_newsockfd;
+        t_args.cli_addr = cli_addr;
 
         if (options.parallelism_mode_opt == MULTIPROCESSING_MODE_SET) {
             pid = fork();
@@ -105,9 +109,11 @@ void* communication_handler(void* arg) {
     ssize_t rd, wt;
     struct srv_pthread_args t_args = *((struct srv_pthread_args*) arg);
     char buffer[BUFFER_MAX_SIZE];
+    char address[ADDR_STR_MAX_SIZE];
 
     while (1) {
         memset(buffer, 0, sizeof(buffer));
+        memset(address, 0, sizeof(address));
         rd = read(t_args.sockfd, buffer, sizeof(buffer));
         if (rd < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
@@ -116,7 +122,9 @@ void* communication_handler(void* arg) {
             puts("ALERT: Closing a connection.");
             break;
         }
-        printf("Here is the message: %s", buffer);
+        sprintf(address, "[%s:%hu]", inet_ntoa(t_args.cli_addr.sin_addr), t_args
+                .cli_addr.sin_port);
+        printf("%s: %s", address, buffer);
         wt = write(t_args.sockfd, "Recebi a mensagem!", 18);
         if (wt < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
