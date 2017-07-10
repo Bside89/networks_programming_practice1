@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <signal.h>
+#include <pthread.h>
 #include "tp1opt.h"
 
 #define LISTEN_ENQ 5
@@ -21,8 +22,9 @@ void* communication_handler(void* arg);
 
 int main(int argc, char** argv) {
 
-    int clilen;
+    int clilen, i = 0;
     pid_t pid;
+    pthread_t threads[LISTEN_ENQ];
 
     struct sockaddr_in serv_addr;
     struct sockaddr_in cli_addr;
@@ -61,17 +63,25 @@ int main(int argc, char** argv) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
             exit(1);
         }
-        pid = fork();
-        if (pid < 0) {
-            fprintf(stderr, "ERROR forking process.\n");
-            exit(1);
-        }
-        if (pid == 0) { // Child process
-            communication_handler((void*) &newsockfd);
-            close(sockfd);
-            return 0;
+        if (options.parallelism_mode_opt == MULTIPROCESSING_MODE_SET) {
+            pid = fork();
+            if (pid < 0) {
+                fprintf(stderr, "ERROR forking process.\n");
+                exit(1);
+            }
+            if (pid == 0) { // Child process
+                communication_handler((void*) &newsockfd);
+                close(sockfd);
+                return 0;
+            } else {
+                close(newsockfd);
+            }
         } else {
-            close(newsockfd);
+            if (pthread_create(&(threads[i++]), NULL,
+                               communication_handler, (void*) &newsockfd) < 0) {
+                fprintf(stderr, "ERROR: %s\n", strerror(errno));
+                exit(1);
+            }
         }
     }
 

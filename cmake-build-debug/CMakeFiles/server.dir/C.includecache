@@ -23,6 +23,8 @@ netinet/in.h
 -
 signal.h
 -
+pthread.h
+-
 tp1opt.h
 /home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/tp1opt.h
 
