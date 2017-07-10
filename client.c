@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <signal.h>
+#include <pthread.h>
 #include "tp1opt.h"
 
 #define BUFFER_MAX_SIZE 256
@@ -22,12 +23,20 @@ void* cli_writer(void *arg);
 void* cli_reader(void *arg);
 
 
+struct cli_pthread_args {
+    int sockfd;
+};
+
+
 int main(int argc, char** argv) {
 
     pid_t pid;
+    pthread_t threads[2];
+
     struct hostent *server;
     struct sockaddr_in serv_addr;
     struct netconfigs options;      // Struct for store program's configs
+    struct cli_pthread_args t_args;
 
     signal(SIGINT, sighandler); // Signal handler for CTRL+C
 
@@ -61,6 +70,7 @@ int main(int argc, char** argv) {
         exit(1);
     }
 
+    t_args.sockfd = sockfd;
     if (options.parallelism_mode_opt == MULTIPROCESSING_MODE_SET) {
         pid = fork();
         if (pid < 0) {
@@ -68,10 +78,23 @@ int main(int argc, char** argv) {
             exit(1);
         }
         if (pid == 0) { // Child process
-            cli_writer((void*) &sockfd);
+            cli_writer((void*) &t_args);
         } else {
-            cli_reader((void*) &sockfd);
+            cli_reader((void*) &t_args);
         }
+    } else {
+        if (pthread_create(&(threads[0]), NULL,
+                           cli_writer, (void*) &t_args) < 0) {
+            fprintf(stderr, "ERROR: %s\n", strerror(errno));
+            exit(1);
+        }
+        if (pthread_create(&(threads[1]), NULL,
+                           cli_reader, (void*) &t_args) < 0) {
+            fprintf(stderr, "ERROR: %s\n", strerror(errno));
+            exit(1);
+        }
+        pthread_join(threads[0], NULL);
+        pthread_join(threads[1], NULL);
     }
 
     close(sockfd);
@@ -90,14 +113,13 @@ void sighandler(int signum) {
 void* cli_reader(void *arg) {
 
     ssize_t rd;
-    int sckt = *((int*) arg);
+    struct cli_pthread_args *t_args = (struct cli_pthread_args*) arg;
     char buffer[BUFFER_MAX_SIZE];
-
     while (1) {
         memset(buffer, 0, sizeof(buffer));
-        rd = read(sckt, buffer, sizeof(buffer) - 1);
+        rd = read(t_args->sockfd, buffer, sizeof(buffer) - 1);
         if (rd  < 0) {
-            fprintf(stderr, "ERROR ON READ: %s\n", strerror(errno));
+            fprintf(stderr, "ERROR: %s\n", strerror(errno));
             exit(1);
         } else if (rd == 0) {
             puts("Closing connection");
@@ -112,10 +134,9 @@ void* cli_reader(void *arg) {
 void* cli_writer(void *arg) {
 
     ssize_t wt;
-    int sckt = *((int*) arg);
+    struct cli_pthread_args *t_args = (struct cli_pthread_args*) arg;
     char* retvalue;
     char buffer[BUFFER_MAX_SIZE];
-
     puts("Digite suas mensagens abaixo:");
     while (1) {
 
@@ -124,9 +145,9 @@ void* cli_writer(void *arg) {
             retvalue = fgets(buffer, sizeof(buffer), stdin);
         } while (retvalue == NULL);
 
-        wt = write(sckt, buffer, sizeof(buffer));
+        wt = write(t_args->sockfd, buffer, sizeof(buffer));
         if (wt < 0) {
-            fprintf(stderr, "ERROR ON WRITE: %s\n", strerror(errno));
+            fprintf(stderr, "ERROR: %s\n", strerror(errno));
             exit(1);
         } else if (wt == 0) {
             puts("Closing connection");

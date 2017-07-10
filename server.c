@@ -21,15 +21,21 @@ void sighandler(int signum);
 void* communication_handler(void* arg);
 
 
+struct srv_pthread_args {
+    int sockfd;
+};
+
+
 int main(int argc, char** argv) {
 
-    int clilen, i = 0;
     pid_t pid;
     pthread_t threads[LISTEN_ENQ];
+    int clilen, i = 0;
 
     struct sockaddr_in serv_addr;
     struct sockaddr_in cli_addr;
     struct netconfigs options;      // Struct for store program's configs
+    //struct srv_pthread_args t_args;
 
     signal(SIGINT, sighandler); // Signal handler for CTRL+C
 
