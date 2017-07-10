@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
     struct sockaddr_in serv_addr;
     struct sockaddr_in cli_addr;
     struct netconfigs options;      // Struct for store program's configs
-    //struct srv_pthread_args t_args;
+    struct srv_pthread_args t_args;
 
     signal(SIGINT, sighandler); // Signal handler for CTRL+C
 
@@ -70,6 +70,10 @@ int main(int argc, char** argv) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
             exit(1);
         }
+
+        // Fill struct passed as argument in handlers
+        t_args.sockfd = newsockfd;
+
         if (options.parallelism_mode_opt == MULTIPROCESSING_MODE_SET) {
             pid = fork();
             if (pid < 0) {
@@ -77,7 +81,7 @@ int main(int argc, char** argv) {
                 exit(1);
             }
             if (pid == 0) { // Child process
-                communication_handler((void*) &newsockfd);
+                communication_handler((void*) &t_args);
                 close(sockfd);
                 return 0;
             } else {
@@ -85,7 +89,7 @@ int main(int argc, char** argv) {
             }
         } else {
             if (pthread_create(&(threads[i++]), NULL,
-                               communication_handler, (void*) &newsockfd) < 0) {
+                               communication_handler, (void*) &t_args) < 0) {
                 fprintf(stderr, "ERROR: %s\n", strerror(errno));
                 exit(1);
             }
@@ -98,12 +102,12 @@ int main(int argc, char** argv) {
 void* communication_handler(void* arg) {
 
     ssize_t rd, wt;
-    int sckt = *((int*) arg);
+    struct srv_pthread_args t_args = *((struct srv_pthread_args*) arg);
     char buffer[BUFFER_MAX_SIZE];
 
     while (1) {
         memset(buffer, 0, sizeof(buffer));
-        rd = read(sckt, buffer, sizeof(buffer));
+        rd = read(t_args.sockfd, buffer, sizeof(buffer));
         if (rd < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
             exit(1);
@@ -112,7 +116,7 @@ void* communication_handler(void* arg) {
             break;
         }
         printf("Here is the message: %s", buffer);
-        wt = write(sckt, "Recebi a mensagem!", 18);
+        wt = write(t_args.sockfd, "Recebi a mensagem!", 18);
         if (wt < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
             exit(1);
@@ -121,7 +125,7 @@ void* communication_handler(void* arg) {
             break;
         }
     }
-    close(sckt);
+    close(t_args.sockfd);
     return NULL;
 }
 
