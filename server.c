@@ -6,30 +6,36 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <signal.h>
+#include <pthread.h>
 #include "tp1opt.h"
 
 #define LISTEN_ENQ 5
+#define BUFFER_MAX_SIZE 256
 
 
 int sockfd, newsockfd;
 
 
-void sighandler(int signum) {
-    printf("CTRL+C pressed\n");
-    close(newsockfd);
-    close(sockfd);
-    exit(0);
-}
+void sighandler(int signum);
+
+void* communication_handler(void* arg);
+
+
+struct srv_pthread_args {
+    int sockfd;
+};
 
 
 int main(int argc, char** argv) {
 
-    int clilen;
-    char buffer[256];
+    pid_t pid;
+    pthread_t threads[LISTEN_ENQ];
+    int clilen, i = 0;
 
     struct sockaddr_in serv_addr;
     struct sockaddr_in cli_addr;
     struct netconfigs options;      // Struct for store program's configs
+    //struct srv_pthread_args t_args;
 
     signal(SIGINT, sighandler); // Signal handler for CTRL+C
 
@@ -46,8 +52,6 @@ int main(int argc, char** argv) {
     }
 
     memset((char*) &serv_addr, 0, sizeof(serv_addr)); // Zero the struct
-
-    //portno = atoi(argv[1]);
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons((uint16_t) options.connection_port);
@@ -59,27 +63,72 @@ int main(int argc, char** argv) {
 
     listen(sockfd, LISTEN_ENQ);
     clilen = sizeof(cli_addr);
-    newsockfd = accept(sockfd, (struct sockaddr*) &cli_addr, (unsigned int*) &clilen);
-    if (newsockfd < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
-        exit(1);
+
+    while (1) {
+        newsockfd = accept(sockfd, (struct sockaddr*) &cli_addr, (unsigned int*) &clilen);
+        if (newsockfd < 0) {
+            fprintf(stderr, "ERROR: %s\n", strerror(errno));
+            exit(1);
+        }
+        if (options.parallelism_mode_opt == MULTIPROCESSING_MODE_SET) {
+            pid = fork();
+            if (pid < 0) {
+                fprintf(stderr, "ERROR forking process.\n");
+                exit(1);
+            }
+            if (pid == 0) { // Child process
+                communication_handler((void*) &newsockfd);
+                close(sockfd);
+                return 0;
+            } else {
+                close(newsockfd);
+            }
+        } else {
+            if (pthread_create(&(threads[i++]), NULL,
+                               communication_handler, (void*) &newsockfd) < 0) {
+                fprintf(stderr, "ERROR: %s\n", strerror(errno));
+                exit(1);
+            }
+        }
     }
-    memset(buffer, 0, sizeof(buffer));
 
-    if (read(newsockfd, buffer, sizeof(buffer)) < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
-        exit(1);
+}
+
+
+void* communication_handler(void* arg) {
+
+    ssize_t rd, wt;
+    int sckt = *((int*) arg);
+    char buffer[BUFFER_MAX_SIZE];
+
+    while (1) {
+        memset(buffer, 0, sizeof(buffer));
+        rd = read(sckt, buffer, sizeof(buffer));
+        if (rd < 0) {
+            fprintf(stderr, "ERROR: %s\n", strerror(errno));
+            exit(1);
+        } else if (rd == 0) {
+            puts("ALERT: Closing a connection.");
+            break;
+        }
+        printf("Here is the message: %s", buffer);
+        wt = write(sckt, "Recebi a mensagem!", 18);
+        if (wt < 0) {
+            fprintf(stderr, "ERROR: %s\n", strerror(errno));
+            exit(1);
+        } else if (wt == 0) {
+            puts("ALERT: Closing a connection.");
+            break;
+        }
     }
+    close(sckt);
+    return NULL;
+}
 
-    printf("Here is the message: %s", buffer);
 
-    if (write(newsockfd, "Recebi a mensagem!", 18) < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
-        exit(1);
-    }
-
+void sighandler(int signum) {
+    printf("CTRL+C pressed\n");
     close(newsockfd);
     close(sockfd);
-
-    return 0;
+    exit(0);
 }

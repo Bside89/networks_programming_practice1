@@ -7,26 +7,36 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <signal.h>
+#include <pthread.h>
 #include "tp1opt.h"
+
+#define BUFFER_MAX_SIZE 256
 
 
 int sockfd;
 
 
-void sighandler(int signum) {
-    printf("\nCTRL+C pressed\n");
-    exit(0);
-}
+void sighandler(int signum);
+
+void* cli_writer(void *arg);
+
+void* cli_reader(void *arg);
+
+
+struct cli_pthread_args {
+    int sockfd;
+};
 
 
 int main(int argc, char** argv) {
 
-    char* retvalue;
-    char buffer[256];
+    pid_t pid;
+    pthread_t threads[2];
 
     struct hostent *server;
     struct sockaddr_in serv_addr;
     struct netconfigs options;      // Struct for store program's configs
+    struct cli_pthread_args t_args;
 
     signal(SIGINT, sighandler); // Signal handler for CTRL+C
 
@@ -60,27 +70,89 @@ int main(int argc, char** argv) {
         exit(1);
     }
 
-    printf("Please enter the message: ");
-    memset(buffer, 0, sizeof(buffer));
-
-    do {
-        retvalue = fgets(buffer, sizeof(buffer), stdin);
-    } while (retvalue == NULL);
-
-    if (write(sockfd, buffer, sizeof(buffer)) < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
-        exit(1);
+    t_args.sockfd = sockfd;
+    if (options.parallelism_mode_opt == MULTIPROCESSING_MODE_SET) {
+        pid = fork();
+        if (pid < 0) {
+            fprintf(stderr, "ERROR forking process.\n");
+            exit(1);
+        }
+        if (pid == 0) { // Child process
+            cli_writer((void*) &t_args);
+        } else {
+            cli_reader((void*) &t_args);
+        }
+    } else {
+        if (pthread_create(&(threads[0]), NULL,
+                           cli_writer, (void*) &t_args) < 0) {
+            fprintf(stderr, "ERROR: %s\n", strerror(errno));
+            exit(1);
+        }
+        if (pthread_create(&(threads[1]), NULL,
+                           cli_reader, (void*) &t_args) < 0) {
+            fprintf(stderr, "ERROR: %s\n", strerror(errno));
+            exit(1);
+        }
+        pthread_join(threads[0], NULL);
+        pthread_join(threads[1], NULL);
     }
-
-    memset(buffer, 0, sizeof(buffer));
-    if (read(sockfd, buffer, sizeof(buffer) - 1) < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
-        exit(1);
-    }
-
-    printf("%s\n", buffer);
 
     close(sockfd);
 
     return 0;
+}
+
+
+void sighandler(int signum) {
+    printf("\nCTRL+C pressed\n");
+    close(sockfd);
+    exit(0);
+}
+
+
+void* cli_reader(void *arg) {
+
+    ssize_t rd;
+    struct cli_pthread_args *t_args = (struct cli_pthread_args*) arg;
+    char buffer[BUFFER_MAX_SIZE];
+    while (1) {
+        memset(buffer, 0, sizeof(buffer));
+        rd = read(t_args->sockfd, buffer, sizeof(buffer) - 1);
+        if (rd  < 0) {
+            fprintf(stderr, "ERROR: %s\n", strerror(errno));
+            exit(1);
+        } else if (rd == 0) {
+            puts("Closing connection");
+            break;
+        }
+        printf("Server >> %s\n", buffer);
+    }
+    return NULL;
+}
+
+
+void* cli_writer(void *arg) {
+
+    ssize_t wt;
+    struct cli_pthread_args *t_args = (struct cli_pthread_args*) arg;
+    char* retvalue;
+    char buffer[BUFFER_MAX_SIZE];
+    puts("Digite suas mensagens abaixo:");
+    while (1) {
+
+        memset(buffer, 0, sizeof(buffer));
+        do {
+            retvalue = fgets(buffer, sizeof(buffer), stdin);
+        } while (retvalue == NULL);
+
+        wt = write(t_args->sockfd, buffer, sizeof(buffer));
+        if (wt < 0) {
+            fprintf(stderr, "ERROR: %s\n", strerror(errno));
+            exit(1);
+        } else if (wt == 0) {
+            puts("Closing connection");
+            break;
+        }
+    }
+    return NULL;
 }

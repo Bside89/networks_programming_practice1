@@ -81,8 +81,8 @@
 					<DistClean command="/usr/bin/make -j4 -f &quot;/home/darkwolf/AllFiles/Faculdade/Season\ 6/Lab\ Redes/Atividades/TP1/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
-			<Target title="client">
-				<Option output="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/bin/client" prefix_auto="0" extension_auto="0"/>
+			<Target title="client2">
+				<Option output="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/bin/client2" prefix_auto="0" extension_auto="0"/>
 				<Option working_dir="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/bin"/>
 				<Option object_output="./"/>
 				<Option type="1"/>
@@ -97,14 +97,14 @@
 					<Add directory="/usr/include"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j4 -f &quot;/home/darkwolf/AllFiles/Faculdade/Season\ 6/Lab\ Redes/Atividades/TP1/cmake-build-debug/Makefile&quot;  VERBOSE=1 client"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/darkwolf/AllFiles/Faculdade/Season\ 6/Lab\ Redes/Atividades/TP1/cmake-build-debug/Makefile&quot;  VERBOSE=1 client2"/>
 					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/darkwolf/AllFiles/Faculdade/Season\ 6/Lab\ Redes/Atividades/TP1/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
 					<Clean command="/usr/bin/make -j4 -f &quot;/home/darkwolf/AllFiles/Faculdade/Season\ 6/Lab\ Redes/Atividades/TP1/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
 					<DistClean command="/usr/bin/make -j4 -f &quot;/home/darkwolf/AllFiles/Faculdade/Season\ 6/Lab\ Redes/Atividades/TP1/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
-			<Target title="client/fast">
-				<Option output="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/bin/client" prefix_auto="0" extension_auto="0"/>
+			<Target title="client2/fast">
+				<Option output="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/bin/client2" prefix_auto="0" extension_auto="0"/>
 				<Option working_dir="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/bin"/>
 				<Option object_output="./"/>
 				<Option type="1"/>
@@ -119,7 +119,51 @@
 					<Add directory="/usr/include"/>
 				</Compiler>
 				<MakeCommands>
-					<Build command="/usr/bin/make -j4 -f &quot;/home/darkwolf/AllFiles/Faculdade/Season\ 6/Lab\ Redes/Atividades/TP1/cmake-build-debug/Makefile&quot;  VERBOSE=1 client/fast"/>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/darkwolf/AllFiles/Faculdade/Season\ 6/Lab\ Redes/Atividades/TP1/cmake-build-debug/Makefile&quot;  VERBOSE=1 client2/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/darkwolf/AllFiles/Faculdade/Season\ 6/Lab\ Redes/Atividades/TP1/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/darkwolf/AllFiles/Faculdade/Season\ 6/Lab\ Redes/Atividades/TP1/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/darkwolf/AllFiles/Faculdade/Season\ 6/Lab\ Redes/Atividades/TP1/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="client1">
+				<Option output="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/bin/client1" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/bin"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/7.1.1/../../../../include/c++/7.1.1"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/7.1.1/../../../../include/c++/7.1.1/x86_64-pc-linux-gnu"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/7.1.1/../../../../include/c++/7.1.1/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/7.1.1/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/7.1.1/include-fixed"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/darkwolf/AllFiles/Faculdade/Season\ 6/Lab\ Redes/Atividades/TP1/cmake-build-debug/Makefile&quot;  VERBOSE=1 client1"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/darkwolf/AllFiles/Faculdade/Season\ 6/Lab\ Redes/Atividades/TP1/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/darkwolf/AllFiles/Faculdade/Season\ 6/Lab\ Redes/Atividades/TP1/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/darkwolf/AllFiles/Faculdade/Season\ 6/Lab\ Redes/Atividades/TP1/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="client1/fast">
+				<Option output="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/bin/client1" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/bin"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/7.1.1/../../../../include/c++/7.1.1"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/7.1.1/../../../../include/c++/7.1.1/x86_64-pc-linux-gnu"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/7.1.1/../../../../include/c++/7.1.1/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/7.1.1/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/7.1.1/include-fixed"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/darkwolf/AllFiles/Faculdade/Season\ 6/Lab\ Redes/Atividades/TP1/cmake-build-debug/Makefile&quot;  VERBOSE=1 client1/fast"/>
 					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/darkwolf/AllFiles/Faculdade/Season\ 6/Lab\ Redes/Atividades/TP1/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
 					<Clean command="/usr/bin/make -j4 -f &quot;/home/darkwolf/AllFiles/Faculdade/Season\ 6/Lab\ Redes/Atividades/TP1/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
 					<DistClean command="/usr/bin/make -j4 -f &quot;/home/darkwolf/AllFiles/Faculdade/Season\ 6/Lab\ Redes/Atividades/TP1/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
@@ -127,18 +171,21 @@
 			</Target>
 		</Build>
 		<Unit filename="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/client.c">
-			<Option target="client"/>
+			<Option target="client2"/>
+			<Option target="client1"/>
 		</Unit>
 		<Unit filename="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/server.c">
 			<Option target="server"/>
 		</Unit>
 		<Unit filename="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/tp1opt.c">
 			<Option target="server"/>
-			<Option target="client"/>
+			<Option target="client2"/>
+			<Option target="client1"/>
 		</Unit>
 		<Unit filename="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/tp1opt.h">
 			<Option target="server"/>
-			<Option target="client"/>
+			<Option target="client2"/>
+			<Option target="client1"/>
 		</Unit>
 		<Unit filename="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/CMakeLists.txt">
 			<Option virtualFolder="CMake Files\"/>

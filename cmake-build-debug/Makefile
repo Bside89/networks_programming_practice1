@@ -124,17 +124,30 @@ server/fast:
 .PHONY : server/fast
 
 #=============================================================================
-# Target rules for targets named client
+# Target rules for targets named client2
 
 # Build rule for target.
-client: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 client
-.PHONY : client
+client2: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 client2
+.PHONY : client2
 
 # fast build rule for target.
-client/fast:
-	$(MAKE) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/build
-.PHONY : client/fast
+client2/fast:
+	$(MAKE) -f CMakeFiles/client2.dir/build.make CMakeFiles/client2.dir/build
+.PHONY : client2/fast
+
+#=============================================================================
+# Target rules for targets named client1
+
+# Build rule for target.
+client1: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 client1
+.PHONY : client1
+
+# fast build rule for target.
+client1/fast:
+	$(MAKE) -f CMakeFiles/client1.dir/build.make CMakeFiles/client1.dir/build
+.PHONY : client1/fast
 
 client.o: client.c.o
 
@@ -142,7 +155,8 @@ client.o: client.c.o
 
 # target to build an object file
 client.c.o:
-	$(MAKE) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/client.c.o
+	$(MAKE) -f CMakeFiles/client2.dir/build.make CMakeFiles/client2.dir/client.c.o
+	$(MAKE) -f CMakeFiles/client1.dir/build.make CMakeFiles/client1.dir/client.c.o
 .PHONY : client.c.o
 
 client.i: client.c.i
@@ -151,7 +165,8 @@ client.i: client.c.i
 
 # target to preprocess a source file
 client.c.i:
-	$(MAKE) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/client.c.i
+	$(MAKE) -f CMakeFiles/client2.dir/build.make CMakeFiles/client2.dir/client.c.i
+	$(MAKE) -f CMakeFiles/client1.dir/build.make CMakeFiles/client1.dir/client.c.i
 .PHONY : client.c.i
 
 client.s: client.c.s
@@ -160,7 +175,8 @@ client.s: client.c.s
 
 # target to generate assembly for a file
 client.c.s:
-	$(MAKE) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/client.c.s
+	$(MAKE) -f CMakeFiles/client2.dir/build.make CMakeFiles/client2.dir/client.c.s
+	$(MAKE) -f CMakeFiles/client1.dir/build.make CMakeFiles/client1.dir/client.c.s
 .PHONY : client.c.s
 
 server.o: server.c.o
@@ -197,7 +213,8 @@ tp1opt.o: tp1opt.c.o
 # target to build an object file
 tp1opt.c.o:
 	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/tp1opt.c.o
-	$(MAKE) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/tp1opt.c.o
+	$(MAKE) -f CMakeFiles/client2.dir/build.make CMakeFiles/client2.dir/tp1opt.c.o
+	$(MAKE) -f CMakeFiles/client1.dir/build.make CMakeFiles/client1.dir/tp1opt.c.o
 .PHONY : tp1opt.c.o
 
 tp1opt.i: tp1opt.c.i
@@ -207,7 +224,8 @@ tp1opt.i: tp1opt.c.i
 # target to preprocess a source file
 tp1opt.c.i:
 	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/tp1opt.c.i
-	$(MAKE) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/tp1opt.c.i
+	$(MAKE) -f CMakeFiles/client2.dir/build.make CMakeFiles/client2.dir/tp1opt.c.i
+	$(MAKE) -f CMakeFiles/client1.dir/build.make CMakeFiles/client1.dir/tp1opt.c.i
 .PHONY : tp1opt.c.i
 
 tp1opt.s: tp1opt.c.s
@@ -217,7 +235,8 @@ tp1opt.s: tp1opt.c.s
 # target to generate assembly for a file
 tp1opt.c.s:
 	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/tp1opt.c.s
-	$(MAKE) -f CMakeFiles/client.dir/build.make CMakeFiles/client.dir/tp1opt.c.s
+	$(MAKE) -f CMakeFiles/client2.dir/build.make CMakeFiles/client2.dir/tp1opt.c.s
+	$(MAKE) -f CMakeFiles/client1.dir/build.make CMakeFiles/client1.dir/tp1opt.c.s
 .PHONY : tp1opt.c.s
 
 # Help Target
@@ -229,7 +248,8 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... server"
-	@echo "... client"
+	@echo "... client2"
+	@echo "... client1"
 	@echo "... client.o"
 	@echo "... client.i"
 	@echo "... client.s"
