@@ -39,7 +39,7 @@
 
 /* Struct containing infos about options chosen by user at startup
  * */
-struct netconfigs {
+struct netsettings {
     int is_server;                  // Flag indicating server or client app;
     int chat_mode_opt;              // Chat mode (UNIQUE or GROUP);
     int parallelism_mode_opt;       // Par. mode (MULTIPROCESS or MULTITHREADING);
@@ -51,7 +51,7 @@ struct netconfigs {
 };
 
 
-int set_options(int argc, char **argv, int is_server, struct netconfigs* netconf);
+int set_options(int argc, char **argv, int is_server, struct netsettings* netconf);
 
 
 #endif //TP1_TP1OPT_H

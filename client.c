@@ -13,7 +13,7 @@
 #define BUFFER_MAX_SIZE 256
 
 
-int sockfd;
+int tcp_sockfd;
 
 
 void sighandler(int signum);
@@ -30,15 +30,7 @@ struct cli_pthread_args {
 
 int main(int argc, char** argv) {
 
-    pid_t pid;
-    pthread_t threads[2];
-
-    struct hostent *server;
-    struct sockaddr_in serv_addr;
-    struct netconfigs options;      // Struct for store program's configs
-    struct cli_pthread_args t_args;
-
-    signal(SIGINT, sighandler); // Signal handler for CTRL+C
+    struct netsettings options; // Struct for store program's settings
 
     // Get all configs by user
     if (set_options(argc, argv, 0, &options) < 0) {
@@ -46,8 +38,16 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) {
+    pid_t pid;
+    pthread_t threads[2];
+    struct hostent *server;
+    struct sockaddr_in serv_addr;
+    struct cli_pthread_args t_args;
+
+    signal(SIGINT, sighandler); // Signal handler for CTRL+C
+
+    tcp_sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (tcp_sockfd < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
         exit(1);
     }
@@ -65,13 +65,13 @@ int main(int argc, char** argv) {
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons((uint16_t) options.connection_port);
 
-    if (connect(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
+    if (connect(tcp_sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
         exit(1);
     }
 
     // Fill struct passed as argument in handlers
-    t_args.sockfd = sockfd;
+    t_args.sockfd = tcp_sockfd;
 
     if (options.parallelism_mode_opt == MULTIPROCESSING_MODE_SET) {
         pid = fork();
@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
         pthread_join(threads[1], NULL);
     }
 
-    close(sockfd);
+    close(tcp_sockfd);
 
     return 0;
 }
@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
 
 void sighandler(int signum) {
     printf("\nCTRL+C pressed\n");
-    close(sockfd);
+    close(tcp_sockfd);
     exit(0);
 }
 

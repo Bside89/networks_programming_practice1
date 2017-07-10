@@ -10,13 +10,13 @@
 #include "tp1opt.h"
 
 
-void debug_options(int is_server, struct netconfigs* netconf);
+void debug_options(int is_server, struct netsettings* netconf);
 
 
 int is_option_valid(int mode);
 
 
-int set_options(int argc, char **argv, int is_server, struct netconfigs* netconf) {
+int set_options(int argc, char **argv, int is_server, struct netsettings* netconf) {
 
     int c, qty, index;
     const char* options;
@@ -163,7 +163,7 @@ int is_option_valid(int mode) {
 }
 
 
-void debug_options(int is_server, struct netconfigs* netconf) {
+void debug_options(int is_server, struct netsettings* netconf) {
 
     printf("Application started in %s mode.\n", (is_server) ? "Server" : "Client");
     printf("%s mode is used.\n",
