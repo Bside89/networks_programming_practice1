@@ -9,21 +9,22 @@
 #include <signal.h>
 #include "tp1opt.h"
 
+#define BUFFER_MAX_SIZE 256
+
 
 int sockfd;
 
 
-void sighandler(int signum) {
-    printf("\nCTRL+C pressed\n");
-    exit(0);
-}
+void sighandler(int signum);
+
+void* cli_writer(void *arg);
+
+void* cli_reader(void *arg);
 
 
 int main(int argc, char** argv) {
 
-    char* retvalue;
-    char buffer[256];
-
+    pid_t pid;
     struct hostent *server;
     struct sockaddr_in serv_addr;
     struct netconfigs options;      // Struct for store program's configs
@@ -60,27 +61,67 @@ int main(int argc, char** argv) {
         exit(1);
     }
 
-    printf("Please enter the message: ");
-    memset(buffer, 0, sizeof(buffer));
-
-    do {
-        retvalue = fgets(buffer, sizeof(buffer), stdin);
-    } while (retvalue == NULL);
-
-    if (write(sockfd, buffer, sizeof(buffer)) < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
-        exit(1);
+    if (options.parallelism_mode_opt == MULTIPROCESSING_MODE_SET) {
+        pid = fork();
+        if (pid < 0) {
+            fprintf(stderr, "ERROR forking process.\n");
+            exit(1);
+        }
+        if (pid == 0) { // Child process
+            cli_writer((void*) &sockfd);
+        } else {
+            cli_reader((void*) &sockfd);
+        }
     }
-
-    memset(buffer, 0, sizeof(buffer));
-    if (read(sockfd, buffer, sizeof(buffer) - 1) < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
-        exit(1);
-    }
-
-    printf("%s\n", buffer);
 
     close(sockfd);
 
     return 0;
+}
+
+
+void sighandler(int signum) {
+    printf("\nCTRL+C pressed\n");
+    close(sockfd);
+    exit(0);
+}
+
+
+void* cli_reader(void *arg) {
+
+    int sckt = *((int*) arg);
+    char buffer[BUFFER_MAX_SIZE];
+
+    while (1) {
+        memset(buffer, 0, sizeof(buffer));
+        if (read(sckt, buffer, sizeof(buffer) - 1) < 0) {
+            fprintf(stderr, "ERROR ON READ: %s\n", strerror(errno));
+            exit(1);
+        }
+        printf("Server >> %s\n", buffer);
+    }
+    return NULL;
+}
+
+
+void* cli_writer(void *arg) {
+
+    int sckt = *((int*) arg);
+    char* retvalue;
+    char buffer[BUFFER_MAX_SIZE];
+
+    while (1) {
+
+        printf("Client >> ");
+        memset(buffer, 0, sizeof(buffer));
+        do {
+            retvalue = fgets(buffer, sizeof(buffer), stdin);
+        } while (retvalue == NULL);
+
+        if (write(sckt, buffer, sizeof(buffer)) < 0) {
+            fprintf(stderr, "ERROR ON WRITE: %s\n", strerror(errno));
+            exit(1);
+        }
+    }
+    return NULL;
 }

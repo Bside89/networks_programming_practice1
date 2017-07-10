@@ -20,6 +20,7 @@ void sighandler(int signum);
 
 void* communication_handler(void* arg);
 
+
 int main(int argc, char** argv) {
 
     int clilen, i = 0;
@@ -93,15 +94,17 @@ void* communication_handler(void* arg) {
     int sckt = *((int*) arg);
     char buffer[BUFFER_MAX_SIZE];
 
-    memset(buffer, 0, sizeof(buffer));
-    if (read(sckt, buffer, sizeof(buffer)) < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
-        exit(1);
-    }
-    printf("Here is the message: %s", buffer);
-    if (write(sckt, "Recebi a mensagem!", 18) < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
-        exit(1);
+    while (1) {
+        memset(buffer, 0, sizeof(buffer));
+        if (read(sckt, buffer, sizeof(buffer)) < 0) {
+            fprintf(stderr, "ERROR: %s\n", strerror(errno));
+            exit(1);
+        }
+        printf("Here is the message: %s", buffer);
+        if (write(sckt, "Recebi a mensagem!", 18) < 0) {
+            fprintf(stderr, "ERROR: %s\n", strerror(errno));
+            exit(1);
+        }
     }
     close(sckt);
     return NULL;
