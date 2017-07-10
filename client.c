@@ -70,7 +70,9 @@ int main(int argc, char** argv) {
         exit(1);
     }
 
+    // Fill struct passed as argument in handlers
     t_args.sockfd = sockfd;
+
     if (options.parallelism_mode_opt == MULTIPROCESSING_MODE_SET) {
         pid = fork();
         if (pid < 0) {
@@ -113,11 +115,11 @@ void sighandler(int signum) {
 void* cli_reader(void *arg) {
 
     ssize_t rd;
-    struct cli_pthread_args *t_args = (struct cli_pthread_args*) arg;
+    struct cli_pthread_args t_args = *((struct cli_pthread_args*) arg);
     char buffer[BUFFER_MAX_SIZE];
     while (1) {
         memset(buffer, 0, sizeof(buffer));
-        rd = read(t_args->sockfd, buffer, sizeof(buffer) - 1);
+        rd = read(t_args.sockfd, buffer, sizeof(buffer) - 1);
         if (rd  < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
             exit(1);
@@ -134,9 +136,10 @@ void* cli_reader(void *arg) {
 void* cli_writer(void *arg) {
 
     ssize_t wt;
-    struct cli_pthread_args *t_args = (struct cli_pthread_args*) arg;
+    struct cli_pthread_args t_args = *((struct cli_pthread_args*) arg);
     char* retvalue;
     char buffer[BUFFER_MAX_SIZE];
+
     puts("Digite suas mensagens abaixo:");
     while (1) {
 
@@ -145,7 +148,7 @@ void* cli_writer(void *arg) {
             retvalue = fgets(buffer, sizeof(buffer), stdin);
         } while (retvalue == NULL);
 
-        wt = write(t_args->sockfd, buffer, sizeof(buffer));
+        wt = write(t_args.sockfd, buffer, sizeof(buffer));
         if (wt < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
             exit(1);
