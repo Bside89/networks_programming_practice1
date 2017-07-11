@@ -22,55 +22,69 @@ const conn_t closed_connection = {NULL_SOCKET, ""};
 
 slist* slist_new(size_t size) {
     slist *new = malloc(sizeof(new));
-    new->size = 0;
-    new->max_size = size;
-    new->conn_array = malloc(size * sizeof(conn_t));
-    int i;
-    for (i = 0; i < size; i++) {
-        new->conn_array[i] = closed_connection;
+    if (new != NULL) {
+        new->size = 0;
+        new->max_size = size;
+        new->conn_array = malloc(size * sizeof(conn_t));
+        if (new->conn_array == NULL) {
+            free(new);
+            return NULL;
+        }
+        int i;
+        for (i = 0; i < size; i++) {
+            new->conn_array[i] = closed_connection;
+        }
     }
     return new;
 }
 
 
-void slist_push(slist* list, struct connection value) {
+int slist_push(slist* list, struct connection value) {
     int i;
+    if (list->size == list->max_size)
+        return SLIST_MAX_SIZE_REACHED;
     for (i = 0; i < list->max_size; i++) {
         if (list->conn_array[i].sockfd == NULL_SOCKET) {
             list->conn_array[i] = value;
             list->size++;
-            return;
+            break;
         }
     }
+    return SLIST_OK;
 }
 
 
-void slist_pop(slist* list, int sockfd) {
+int slist_pop(slist* list, int sockfd) {
     int i;
+    if (list->size == 0)
+        return SLIST_EMPTY;
     for (i = 0; i < list->max_size; i++) {
         if (list->conn_array[i].sockfd == sockfd) {
             list->conn_array[i] = closed_connection;
             list->size--;
-            return;
+            break;
         }
     }
+    return SLIST_OK;
 }
 
 
-void slist_get(slist *list, int sockfd, struct connection *value) {
+int slist_get_element(slist *list, int sockfd, struct connection *value) {
     int i;
     for (i = 0; i < list->max_size; i++) {
         if (list->conn_array[i].sockfd == sockfd) {
             value->sockfd = sockfd;
             strcpy(value->address, list->conn_array[i].address);
-            return;
+            return SLIST_OK;
         }
     }
+    return SLIST_ELEMENT_NOT_FOUND;
 }
 
 
 unsigned long int slist_size(slist *list) {
-    return list->size;
+
+    return (list != NULL) ? list->size : 0;
 }
 
 
@@ -87,7 +101,7 @@ void slist_debug(slist *list) {
     for (i = 0; i < list->size; i++) {
         if (list->conn_array[i].sockfd != NULL_SOCKET) {
             printf("<%d> <%s>\n", list->conn_array[i].sockfd,
-                   list->conn_array->address);
+                   list->conn_array[i].address);
         }
     }
 }

@@ -123,7 +123,7 @@ void* cli_reader(void *arg) {
             exit(1);
         } else if (rd == 0) {
             puts("Closing connection");
-            break;
+            exit(EXIT_SUCCESS);
         }
         printf("Server >> %s\n", buffer);
     }
@@ -152,7 +152,7 @@ void* cli_writer(void *arg) {
             exit(1);
         } else if (wt == 0) {
             puts("Closing connection");
-            break;
+            exit(EXIT_SUCCESS);
         }
     }
     return NULL;
@@ -171,5 +171,6 @@ void sigterm_handler(int signum) {
 
 void print_n_exit(char *str) {
     puts(str);
+    close(tcp_sockfd);
     exit(0);
 }
