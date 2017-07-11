@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include "slist.h"
 
 #define NULL_SOCKET -1
@@ -68,9 +69,34 @@ void slist_get(slist *list, int sockfd, struct connection *value) {
 }
 
 
-void slist_destroy(slist** list) {
+unsigned long int slist_size(slist *list) {
+    return list->size;
+}
 
-    free((*list)->conn_array);
-    free(*list);
-    *list = NULL;
+
+void slist_debug(slist *list) {
+    int i;
+    if (list == NULL) {
+        puts("This list is null.");
+        return;
+    }
+    if (list->size == 0) {
+        puts("This list is empty.");
+        return;
+    }
+    for (i = 0; i < list->size; i++) {
+        if (list->conn_array[i].sockfd != NULL_SOCKET) {
+            printf("<%d> <%s>\n", list->conn_array[i].sockfd,
+                   list->conn_array->address);
+        }
+    }
+}
+
+
+void slist_destroy(slist** list) {
+    if (list != NULL && *list != NULL) {
+        free((*list)->conn_array);
+        free(*list);
+        *list = NULL;
+    }
 }

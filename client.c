@@ -20,6 +20,12 @@ void* cli_writer(void *arg);
 
 void* cli_reader(void *arg);
 
+void sigint_handler(int signum);
+
+void sigterm_handler(int signum);
+
+void print_n_exit(char *str);
+
 
 struct cli_pthread_args {
     int sockfd;
@@ -150,4 +156,20 @@ void* cli_writer(void *arg) {
         }
     }
     return NULL;
+}
+
+
+void sigint_handler(int signum) {
+    print_n_exit("SIGINT received. Exiting.");
+}
+
+
+void sigterm_handler(int signum) {
+    print_n_exit("SIGTERM received. Exiting.");
+}
+
+
+void print_n_exit(char *str) {
+    puts(str);
+    exit(0);
 }

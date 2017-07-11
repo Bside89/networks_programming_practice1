@@ -25,6 +25,10 @@ void slist_pop(slist* list, int sockfd);
 
 void slist_get(slist *list, int sockfd, struct connection *value);
 
+unsigned long int slist_size(slist *list);
+
+void slist_debug(slist *list);
+
 void slist_destroy(slist** list);
 
 

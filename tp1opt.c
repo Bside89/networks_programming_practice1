@@ -14,8 +14,6 @@ void debug_options(int is_server, struct netsettings* netconf);
 
 int is_option_valid(int mode);
 
-void print_n_exit(char *str);
-
 
 int set_options(int argc, char **argv, int is_server, struct netsettings* netconf) {
 
@@ -185,17 +183,4 @@ void debug_options(int is_server, struct netsettings* netconf) {
 }
 
 
-void sigint_handler(int signum) {
-    print_n_exit("SIGINT received. Exiting.");
-}
 
-
-void sigterm_handler(int signum) {
-    print_n_exit("SIGTERM received. Exiting.");
-}
-
-
-void print_n_exit(char *str) {
-    puts(str);
-    exit(0);
-}
