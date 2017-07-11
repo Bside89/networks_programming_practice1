@@ -25,6 +25,8 @@ signal.h
 -
 pthread.h
 -
+arpa/inet.h
+-
 tp1opt.h
 /home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/tp1opt.h
 
@@ -38,6 +40,8 @@ string.h
 ctype.h
 -
 sys/socket.h
+-
+signal.h
 -
 tp1opt.h
 /home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/tp1opt.h

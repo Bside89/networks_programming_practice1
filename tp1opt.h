@@ -53,5 +53,9 @@ struct netsettings {
 
 int set_options(int argc, char **argv, int is_server, struct netsettings* netconf);
 
+void sigint_handler(int signum);
+
+void sigterm_handler(int signum);
+
 
 #endif //TP1_TP1OPT_H

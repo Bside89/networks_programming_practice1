@@ -17,8 +17,6 @@
 int tcp_sockfd, tcp_newsockfd, udp_sockfd;
 
 
-void sighandler(int signum);
-
 void* communication_handler(void* arg);
 
 
@@ -45,7 +43,8 @@ int main(int argc, char** argv) {
     struct sockaddr_in cli_addr;
     struct srv_pthread_args t_args;
 
-    signal(SIGINT, sighandler); // Signal handler for CTRL+C
+    signal(SIGINT, sigint_handler);     // Signal handler for SIGINT
+    signal(SIGTERM, sigterm_handler);   // Signal handler for SIGTERM
 
     tcp_sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (tcp_sockfd < 0) {
@@ -111,37 +110,31 @@ void* communication_handler(void* arg) {
     char buffer[BUFFER_MAX_SIZE];
     char address[ADDR_STR_MAX_SIZE];
 
+    memset(address, 0, sizeof(address));
+    sprintf(address, "%s:%hu", inet_ntoa(t_args.cli_addr.sin_addr),
+            t_args.cli_addr.sin_port);
+    printf("Client %s has logged in.\n", address);
     while (1) {
+
         memset(buffer, 0, sizeof(buffer));
-        memset(address, 0, sizeof(address));
         rd = read(t_args.sockfd, buffer, sizeof(buffer));
         if (rd < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
             exit(EXIT_FAILURE);
         } else if (rd == 0) {
-            puts("ALERT: Closing a connection.");
+            printf("Client %s has logged out.\n", address);
             break;
         }
-        sprintf(address, "[%s:%hu]", inet_ntoa(t_args.cli_addr.sin_addr), t_args
-                .cli_addr.sin_port);
-        printf("%s: %s", address, buffer);
+        printf("[%s]: %s", address, buffer);
         wt = write(t_args.sockfd, "Recebi a mensagem!", 18);
         if (wt < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
             exit(EXIT_FAILURE);
         } else if (wt == 0) {
-            puts("ALERT: Closing a connection.");
+            printf("Client %s has logged out.\n", address);
             break;
         }
     }
     close(t_args.sockfd);
     return NULL;
-}
-
-
-void sighandler(int signum) {
-    printf("CTRL+C pressed\n");
-    close(tcp_newsockfd);
-    close(tcp_sockfd);
-    exit(0);
 }

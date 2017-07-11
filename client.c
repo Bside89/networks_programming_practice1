@@ -16,8 +16,6 @@
 int tcp_sockfd;
 
 
-void sighandler(int signum);
-
 void* cli_writer(void *arg);
 
 void* cli_reader(void *arg);
@@ -44,7 +42,8 @@ int main(int argc, char** argv) {
     struct sockaddr_in serv_addr;
     struct cli_pthread_args t_args;
 
-    signal(SIGINT, sighandler); // Signal handler for CTRL+C
+    signal(SIGINT, sigint_handler);     // Signal handler for SIGINT
+    signal(SIGTERM, sigterm_handler);   // Signal handler for SIGTERM
 
     tcp_sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (tcp_sockfd < 0) {
@@ -102,13 +101,6 @@ int main(int argc, char** argv) {
     close(tcp_sockfd);
 
     return 0;
-}
-
-
-void sighandler(int signum) {
-    printf("\nCTRL+C pressed\n");
-    close(tcp_sockfd);
-    exit(0);
 }
 
 
