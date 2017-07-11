@@ -15,9 +15,6 @@
 #define ADDR_STR_MAX_SIZE 24 // IP and Port used on print
 
 
-int tcp_sockfd, tcp_newsockfd;
-
-
 void* communication_handler(void* arg);
 
 
@@ -33,7 +30,7 @@ int main(int argc, char** argv) {
 
     pid_t pid;
     pthread_t threads[options.max_connections_opt + 1];
-    int clilen, i = 0;
+    int tcp_sockfd, tcp_newsockfd, clilen, i = 0;
     struct sockaddr_in serv_addr;
     struct sockaddr_in cli_addr;
     conn_t t_args;
