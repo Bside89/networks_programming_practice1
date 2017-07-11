@@ -14,4 +14,4 @@ SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_PTHREAD_FLAG}")
 
 add_executable(client1 client.c tp1opt.c tp1opt.h)
 add_executable(client2 client.c tp1opt.c tp1opt.h)
-add_executable(server server.c tp1opt.c tp1opt.h)
+add_executable(server server.c tp1opt.c tp1opt.h slist.c slist.h)

@@ -7,7 +7,6 @@
 #include <string.h>
 #include <ctype.h>
 #include <sys/socket.h>
-#include <signal.h>
 #include "tp1opt.h"
 
 

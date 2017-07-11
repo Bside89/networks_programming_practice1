@@ -177,6 +177,12 @@
 		<Unit filename="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/server.c">
 			<Option target="server"/>
 		</Unit>
+		<Unit filename="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/slist.c">
+			<Option target="server"/>
+		</Unit>
+		<Unit filename="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/slist.h">
+			<Option target="server"/>
+		</Unit>
 		<Unit filename="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/tp1opt.c">
 			<Option target="server"/>
 			<Option target="client2"/>

@@ -9,21 +9,16 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 #include "tp1opt.h"
+#include "slist.h"
 
 #define BUFFER_MAX_SIZE 256
 #define ADDR_STR_MAX_SIZE 24 // IP and Port used on print
 
 
-int tcp_sockfd, tcp_newsockfd, udp_sockfd;
+int tcp_sockfd, tcp_newsockfd;
 
 
 void* communication_handler(void* arg);
-
-
-struct srv_pthread_args {
-    int sockfd;
-    struct sockaddr_in cli_addr;
-};
 
 
 int main(int argc, char** argv) {
@@ -41,7 +36,7 @@ int main(int argc, char** argv) {
     int clilen, i = 0;
     struct sockaddr_in serv_addr;
     struct sockaddr_in cli_addr;
-    struct srv_pthread_args t_args;
+    conn_t t_args;
 
     signal(SIGINT, sigint_handler);     // Signal handler for SIGINT
     signal(SIGTERM, sigterm_handler);   // Signal handler for SIGTERM
@@ -75,8 +70,11 @@ int main(int argc, char** argv) {
         }
 
         // Fill struct passed as argument in handlers
+        memset(&t_args, 0, sizeof(t_args));
         t_args.sockfd = tcp_newsockfd;
-        t_args.cli_addr = cli_addr;
+        sprintf(t_args.address, "%s:%hu", inet_ntoa(cli_addr.sin_addr),
+                cli_addr.sin_port);
+        printf("Client %s has logged in.\n", t_args.address);
 
         if (options.parallelism_mode_opt == MULTIPROCESSING_MODE_SET) {
             pid = fork();
@@ -106,14 +104,9 @@ int main(int argc, char** argv) {
 void* communication_handler(void* arg) {
 
     ssize_t rd, wt;
-    struct srv_pthread_args t_args = *((struct srv_pthread_args*) arg);
+    struct connection t_args = *((struct connection*) arg);
     char buffer[BUFFER_MAX_SIZE];
-    char address[ADDR_STR_MAX_SIZE];
 
-    memset(address, 0, sizeof(address));
-    sprintf(address, "%s:%hu", inet_ntoa(t_args.cli_addr.sin_addr),
-            t_args.cli_addr.sin_port);
-    printf("Client %s has logged in.\n", address);
     while (1) {
 
         memset(buffer, 0, sizeof(buffer));
@@ -122,16 +115,16 @@ void* communication_handler(void* arg) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
             exit(EXIT_FAILURE);
         } else if (rd == 0) {
-            printf("Client %s has logged out.\n", address);
+            printf("Client %s has logged out.\n", t_args.address);
             break;
         }
-        printf("[%s]: %s", address, buffer);
+        printf("[%s]: %s", t_args.address, buffer);
         wt = write(t_args.sockfd, "Recebi a mensagem!", 18);
         if (wt < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
             exit(EXIT_FAILURE);
         } else if (wt == 0) {
-            printf("Client %s has logged out.\n", address);
+            printf("Client %s has logged out.\n", t_args.address);
             break;
         }
     }

@@ -206,6 +206,33 @@ server.c.s:
 	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/server.c.s
 .PHONY : server.c.s
 
+slist.o: slist.c.o
+
+.PHONY : slist.o
+
+# target to build an object file
+slist.c.o:
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/slist.c.o
+.PHONY : slist.c.o
+
+slist.i: slist.c.i
+
+.PHONY : slist.i
+
+# target to preprocess a source file
+slist.c.i:
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/slist.c.i
+.PHONY : slist.c.i
+
+slist.s: slist.c.s
+
+.PHONY : slist.s
+
+# target to generate assembly for a file
+slist.c.s:
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/slist.c.s
+.PHONY : slist.c.s
+
 tp1opt.o: tp1opt.c.o
 
 .PHONY : tp1opt.o
@@ -256,6 +283,9 @@ help:
 	@echo "... server.o"
 	@echo "... server.i"
 	@echo "... server.s"
+	@echo "... slist.o"
+	@echo "... slist.i"
+	@echo "... slist.s"
 	@echo "... tp1opt.o"
 	@echo "... tp1opt.i"
 	@echo "... tp1opt.s"
