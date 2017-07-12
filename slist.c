@@ -69,12 +69,25 @@ int slist_pop(slist* list, int sockfd) {
 }
 
 
-int slist_get_element(slist *list, int sockfd, struct connection *value) {
+int slist_get_by_socket(slist *list, int sockfd, struct connection *value) {
     int i;
     for (i = 0; i < list->max_size; i++) {
         if (list->conn_array[i].sockfd == sockfd) {
             value->sockfd = sockfd;
             strcpy(value->address, list->conn_array[i].address);
+            return SLIST_OK;
+        }
+    }
+    return SLIST_ELEMENT_NOT_FOUND;
+}
+
+
+int slist_get_by_address(slist *list, char* addr, struct connection *value) {
+    int i;
+    for (i = 0; i < list->max_size; i++) {
+        if (strcmp(addr, list->conn_array[i].address) == 0) {
+            value->sockfd = list->conn_array[i].sockfd;
+            strcpy(value->address, addr);
             return SLIST_OK;
         }
     }

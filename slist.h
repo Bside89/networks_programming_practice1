@@ -27,7 +27,9 @@ int slist_push(slist* list, struct connection value);
 
 int slist_pop(slist* list, int sockfd);
 
-int slist_get_element(slist *list, int sockfd, struct connection *value);
+int slist_get_by_socket(slist *list, int sockfd, struct connection *value);
+
+int slist_get_by_address(slist *list, char* addr, struct connection *value);
 
 unsigned long int slist_size(slist *list);
 
