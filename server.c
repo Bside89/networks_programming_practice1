@@ -14,13 +14,12 @@
 
 #define BUFFER_MAX_SIZE 256
 
-// Flag
+// Flag that indicate if it is time to shutdown (switched by signal handler)
 volatile int is_exit = 0;
 
 // Global, to avoid "value escapes local scope" warning;
 // Common to all threads / forked processes
 fd_set active_sockets;
-slist* active_clients;
 
 
 void* reader_handler(void *arg);
@@ -55,7 +54,7 @@ int main(int argc, char** argv) {
     int sockfd, newsockfd;
     int clilen = sizeof(cli_addr);
     int i, n;
-    conn_t value;
+    char address[23];
 
     signal(SIGINT, sigint_handler);     // Signal handler for SIGINT
     signal(SIGTERM, sigterm_handler);   // Signal handler for SIGTERM
@@ -89,8 +88,8 @@ int main(int argc, char** argv) {
         listen(sockfd, options.max_connections_opt);
     }
 
-    // Initialize active connection's list (allocation)
-    active_clients = slist_new((size_t) options.max_connections_opt);
+    // Initialize active connection's list
+    slist_new((size_t) options.max_connections_opt);
 
     // Parallelism (fork or new thread)
     if (options.parallelism_mode_opt == MULTIPROCESSING_MODE_SET) {
@@ -118,8 +117,8 @@ int main(int argc, char** argv) {
 
         // I/O multiplexing
         if (select(FD_SETSIZE, &read_sockets, NULL, NULL, NULL) < 0) {
-            perror ("select");
-            exit (EXIT_FAILURE);
+            puts("No more inputs. Server went down.");
+            break;
         }
         for (i = 0; i < FD_SETSIZE; i++) {
 
@@ -136,12 +135,11 @@ int main(int argc, char** argv) {
                 }
 
                 // Fill struct (conn_t) passed as argument in handlers
-                memset(&value, 0, sizeof(value));
-                value.sockfd = newsockfd;
-                sprintf(value.address, "%s:%hu", inet_ntoa(cli_addr.sin_addr),
+                memset(&address, 0, sizeof(address));
+                sprintf(address, "%s:%hu", inet_ntoa(cli_addr.sin_addr),
                         ntohs(cli_addr.sin_port));
 
-                n = slist_push(active_clients, value); // Insert into list
+                n = slist_push(newsockfd, address); // Insert into list
                 if (n == SLIST_MAX_SIZE_REACHED) {
                     send_unit_message(newsockfd, "Max connections reached. "
                             "Connection refused.\n");
@@ -150,21 +148,19 @@ int main(int argc, char** argv) {
 
                 FD_SET(newsockfd, &active_sockets);
 
-                printf("Client %s has logged in.\n", value.address);
+                printf("Client %s has logged in.\n", address);
 
             } else { // Get message from socket (TCP or UDP)
 
-                n = slist_get_by_socket(active_clients, i, &value);
-                assert(n == SLIST_OK);
-                reader_handler((void*) &value);
-
+                reader_handler((void*) &i);
             }
         }
     }
     close(sockfd);
-    slist_destroy(&active_clients); // Free allocated memory to slist
-    assert(active_clients == NULL);
+    slist_destroy(); // Free allocated memory to slist
+    FD_ZERO(&active_sockets);
 
+    puts("Bye!");
     return 0;
 }
 
@@ -180,9 +176,9 @@ void* writer_handler(void *arg) {
             retvalue = fgets(buffer, sizeof(buffer), stdin);
         } while (retvalue == NULL);
 
-        if (strstr("finalize", buffer) == NULL) {
+        if (strstr(buffer, "/finalize") != NULL) {
             puts("Closing the server.");
-            return NULL;
+            kill(getppid(), SIGTERM);
         }
         printf("Server >> %s\n", buffer);
     }
@@ -193,23 +189,24 @@ void* writer_handler(void *arg) {
 
 void* reader_handler(void *arg) {
 
-    conn_t connection = *((conn_t*) arg);
+    int sockfd = *((int*) arg);
     char buffer[BUFFER_MAX_SIZE];
+    char *address = slist_get_address_by_socket(sockfd);
 
     memset(buffer, 0, sizeof(buffer));
 
-    ssize_t rd = read(connection.sockfd, buffer, sizeof(buffer));
+    ssize_t rd = read(sockfd, buffer, sizeof(buffer));
     if (rd < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
         exit(EXIT_FAILURE);
     } else if (rd == 0) {
-        printf("Client %s has logged out.\n", connection.address);
-        int n = slist_pop(active_clients, connection.sockfd); // Close occurs here
+        printf("Client %s has logged out.\n", address);
+        int n = slist_pop(sockfd); // Close occurs here
         assert(n == SLIST_OK);
-        FD_CLR(connection.sockfd, &active_sockets);
+        FD_CLR(sockfd, &active_sockets);
         return NULL;
     }
-    printf("[%s]: %s", connection.address, buffer);
+    printf("[%s]: %s", address, buffer);
 
     return NULL;
 }
@@ -222,7 +219,7 @@ void send_unit_message(int sockfd, char *str) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
         exit(EXIT_FAILURE);
     } else if (wd == 0) {
-        int n = slist_pop(active_clients, sockfd); // Close occurs here
+        int n = slist_pop(sockfd); // Close occurs here
         assert(n == SLIST_OK);
         FD_CLR(sockfd, &active_sockets);
     }
@@ -230,16 +227,16 @@ void send_unit_message(int sockfd, char *str) {
 
 
 void sigint_handler(int signum) {
-    print_n_close("SIGINT received. Exiting.\n");
+    print_n_close("\nSIGINT received. Exiting.");
 }
 
 
 void sigterm_handler(int signum) {
-    print_n_close("SIGTERM received. Exiting.\n");
+    print_n_close("\nSIGTERM received. Exiting.");
 }
 
 
 void print_n_close(char *str) {
-    write(STDOUT_FILENO, str, sizeof(str));
+    puts(str);
     is_exit = 1;
 }

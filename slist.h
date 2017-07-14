@@ -5,37 +5,33 @@
 #ifndef TP1_SLIST_H
 #define TP1_SLIST_H
 
+#define NULL_SOCKET -1
+#define NULL_ADDRESS ""
+
 #define SLIST_ADDR_MAX_SIZE 24 // IP and Port used on print
 #define SLIST_OK 0
 #define SLIST_MAX_SIZE_REACHED 1
 #define SLIST_EMPTY 2
-#define SLIST_ELEMENT_NOT_FOUND 3
+#define SLIST_ALLOCATION_ERROR 4
 
 
-typedef struct connection {
-    int sockfd;
-    char address[SLIST_ADDR_MAX_SIZE];
-} conn_t;
+int slist_new(size_t size);
 
+int slist_push(int sockfd, char* address);
 
-typedef struct _slist slist;
+int slist_pop(int sockfd);
 
+char* slist_get_address_by_socket(int sockfd);
 
-slist* slist_new(size_t size);
+int slist_get_socket_by_address(char *address);
 
-int slist_push(slist* list, struct connection value);
+unsigned long int slist_size();
 
-int slist_pop(slist* list, int sockfd);
+void slist_debug();
 
-int slist_get_by_socket(slist *list, int sockfd, struct connection *value);
+int slist_is_allocated();
 
-int slist_get_by_address(slist *list, char* addr, struct connection *value);
-
-unsigned long int slist_size(slist *list);
-
-void slist_debug(slist *list);
-
-void slist_destroy(slist** list);
+void slist_destroy();
 
 
 #endif //TP1_SLIST_H

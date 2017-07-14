@@ -13,7 +13,7 @@
 #define BUFFER_MAX_SIZE 256
 
 
-volatile int is_exit = 0;
+int sockfd;
 
 
 void* cli_writer(void *arg);
@@ -27,11 +27,6 @@ void sigterm_handler(int signum);
 void print_n_close(char *str);
 
 
-struct cli_pthread_args {
-    int sockfd;
-};
-
-
 int main(int argc, char** argv) {
 
     struct netsettings options; // Struct for store program's settings
@@ -42,12 +37,10 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
 
-    int sockfd;
     pid_t pid;
     pthread_t threads;
     struct hostent *server;
     struct sockaddr_in serv_addr;
-    struct cli_pthread_args t_args;
 
     signal(SIGINT, sigint_handler);     // Signal handler for SIGINT
     signal(SIGTERM, sigterm_handler);   // Signal handler for SIGTERM
@@ -73,11 +66,8 @@ int main(int argc, char** argv) {
 
     if (connect(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
-        exit(1);
+        exit(EXIT_FAILURE);
     }
-
-    // Fill struct passed as argument in handlers
-    t_args.sockfd = sockfd;
 
     if (options.parallelism_mode_opt == MULTIPROCESSING_MODE_SET) {
         pid = fork();
@@ -86,18 +76,18 @@ int main(int argc, char** argv) {
             exit(1);
         }
         if (pid == 0) { // Child process handles writing
-            cli_writer((void*) &t_args);
+            cli_writer((void*) &sockfd);
         } else {        // Father process handles reading
-            cli_reader((void*) &t_args);
-            kill(pid, SIGINT);
+            cli_reader((void*) &sockfd);
+            kill(pid, SIGTERM);
         }
     } else {
         // New thread handles writing
-        if (pthread_create(&threads, NULL, cli_writer, (void*) &t_args) < 0) {
+        if (pthread_create(&threads, NULL, cli_writer, (void*) &sockfd) < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
-            exit(1);
+            exit(EXIT_FAILURE);
         }
-        cli_reader((void*) &t_args); // Main thread handles reading
+        cli_reader((void*) &sockfd); // Main thread handles reading
     }
 
     close(sockfd);
@@ -109,17 +99,17 @@ int main(int argc, char** argv) {
 void* cli_reader(void *arg) {
 
     ssize_t rd;
-    struct cli_pthread_args t_args = *((struct cli_pthread_args*) arg);
+    int sckt = *((int*) arg);
     char buffer[BUFFER_MAX_SIZE];
-    while (!is_exit) {
+    while (1) {
         memset(buffer, 0, sizeof(buffer));
-        rd = read(t_args.sockfd, buffer, sizeof(buffer) - 1);
+        rd = read(sckt, buffer, sizeof(buffer) - 1);
         if (rd  < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
-            exit(1);
+            break;
         } else if (rd == 0) {
-            puts("\nClosing connection.");
-            exit(EXIT_SUCCESS);
+            puts("\nClosing connection on reader.");
+            break;
         }
         printf("[SERVER]: %s\n", buffer);
     }
@@ -130,25 +120,25 @@ void* cli_reader(void *arg) {
 void* cli_writer(void *arg) {
 
     ssize_t wt;
-    struct cli_pthread_args t_args = *((struct cli_pthread_args*) arg);
+    int sckt = *((int*) arg);
     char* retvalue;
     char buffer[BUFFER_MAX_SIZE];
 
-    while (!is_exit) {
+    while (1) {
 
         memset(buffer, 0, sizeof(buffer));
-        printf(">> ");
+        printf(">>> ");
         do {
             retvalue = fgets(buffer, sizeof(buffer), stdin);
         } while (retvalue == NULL);
 
-        wt = write(t_args.sockfd, buffer, sizeof(buffer));
+        wt = write(sckt, buffer, sizeof(buffer));
         if (wt < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
-            exit(EXIT_FAILURE);
+            break;
         } else if (wt == 0) {
-            puts("\nClosing connection.");
-            exit(EXIT_SUCCESS);
+            puts("\nClosing connection on writer.");
+            break;
         }
     }
     return NULL;
@@ -156,16 +146,17 @@ void* cli_writer(void *arg) {
 
 
 void sigint_handler(int signum) {
-    print_n_close("SIGINT received. Exiting.\n");
+    print_n_close("\nSIGINT received. Exiting.");
 }
 
 
 void sigterm_handler(int signum) {
-    print_n_close("SIGTERM received. Exiting.\n");
+    print_n_close("\nSIGTERM received. Exiting.");
 }
 
 
 void print_n_close(char *str) {
-    write(STDOUT_FILENO, str, sizeof(str));
-    is_exit = 1;
+    puts(str);
+    close(sockfd);
+    exit(EXIT_SUCCESS);
 }
