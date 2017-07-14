@@ -4,9 +4,9 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
+  "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/slist.c" "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles/server.dir/lib/slist.c.o"
+  "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/tp1opt.c" "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles/server.dir/lib/tp1opt.c.o"
   "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/server.c" "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles/server.dir/server.c.o"
-  "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/slist.c" "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles/server.dir/slist.c.o"
-  "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/tp1opt.c" "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles/server.dir/tp1opt.c.o"
   )
 set(CMAKE_C_COMPILER_ID "GNU")
 

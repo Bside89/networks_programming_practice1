@@ -81,66 +81,66 @@ CMakeFiles/server.dir/server.c.o.provides: CMakeFiles/server.dir/server.c.o.requ
 CMakeFiles/server.dir/server.c.o.provides.build: CMakeFiles/server.dir/server.c.o
 
 
-CMakeFiles/server.dir/tp1opt.c.o: CMakeFiles/server.dir/flags.make
-CMakeFiles/server.dir/tp1opt.c.o: ../tp1opt.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/server.dir/tp1opt.c.o"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/server.dir/tp1opt.c.o   -c "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/tp1opt.c"
+CMakeFiles/server.dir/lib/tp1opt.c.o: CMakeFiles/server.dir/flags.make
+CMakeFiles/server.dir/lib/tp1opt.c.o: ../lib/tp1opt.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/server.dir/lib/tp1opt.c.o"
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/server.dir/lib/tp1opt.c.o   -c "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/tp1opt.c"
 
-CMakeFiles/server.dir/tp1opt.c.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/server.dir/tp1opt.c.i"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/tp1opt.c" > CMakeFiles/server.dir/tp1opt.c.i
+CMakeFiles/server.dir/lib/tp1opt.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/server.dir/lib/tp1opt.c.i"
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/tp1opt.c" > CMakeFiles/server.dir/lib/tp1opt.c.i
 
-CMakeFiles/server.dir/tp1opt.c.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/server.dir/tp1opt.c.s"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/tp1opt.c" -o CMakeFiles/server.dir/tp1opt.c.s
+CMakeFiles/server.dir/lib/tp1opt.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/server.dir/lib/tp1opt.c.s"
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/tp1opt.c" -o CMakeFiles/server.dir/lib/tp1opt.c.s
 
-CMakeFiles/server.dir/tp1opt.c.o.requires:
+CMakeFiles/server.dir/lib/tp1opt.c.o.requires:
 
-.PHONY : CMakeFiles/server.dir/tp1opt.c.o.requires
+.PHONY : CMakeFiles/server.dir/lib/tp1opt.c.o.requires
 
-CMakeFiles/server.dir/tp1opt.c.o.provides: CMakeFiles/server.dir/tp1opt.c.o.requires
-	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/tp1opt.c.o.provides.build
-.PHONY : CMakeFiles/server.dir/tp1opt.c.o.provides
+CMakeFiles/server.dir/lib/tp1opt.c.o.provides: CMakeFiles/server.dir/lib/tp1opt.c.o.requires
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/lib/tp1opt.c.o.provides.build
+.PHONY : CMakeFiles/server.dir/lib/tp1opt.c.o.provides
 
-CMakeFiles/server.dir/tp1opt.c.o.provides.build: CMakeFiles/server.dir/tp1opt.c.o
+CMakeFiles/server.dir/lib/tp1opt.c.o.provides.build: CMakeFiles/server.dir/lib/tp1opt.c.o
 
 
-CMakeFiles/server.dir/slist.c.o: CMakeFiles/server.dir/flags.make
-CMakeFiles/server.dir/slist.c.o: ../slist.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/server.dir/slist.c.o"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/server.dir/slist.c.o   -c "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/slist.c"
+CMakeFiles/server.dir/lib/slist.c.o: CMakeFiles/server.dir/flags.make
+CMakeFiles/server.dir/lib/slist.c.o: ../lib/slist.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/server.dir/lib/slist.c.o"
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/server.dir/lib/slist.c.o   -c "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/slist.c"
 
-CMakeFiles/server.dir/slist.c.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/server.dir/slist.c.i"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/slist.c" > CMakeFiles/server.dir/slist.c.i
+CMakeFiles/server.dir/lib/slist.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/server.dir/lib/slist.c.i"
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/slist.c" > CMakeFiles/server.dir/lib/slist.c.i
 
-CMakeFiles/server.dir/slist.c.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/server.dir/slist.c.s"
-	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/slist.c" -o CMakeFiles/server.dir/slist.c.s
+CMakeFiles/server.dir/lib/slist.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/server.dir/lib/slist.c.s"
+	/usr/bin/cc  $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/slist.c" -o CMakeFiles/server.dir/lib/slist.c.s
 
-CMakeFiles/server.dir/slist.c.o.requires:
+CMakeFiles/server.dir/lib/slist.c.o.requires:
 
-.PHONY : CMakeFiles/server.dir/slist.c.o.requires
+.PHONY : CMakeFiles/server.dir/lib/slist.c.o.requires
 
-CMakeFiles/server.dir/slist.c.o.provides: CMakeFiles/server.dir/slist.c.o.requires
-	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/slist.c.o.provides.build
-.PHONY : CMakeFiles/server.dir/slist.c.o.provides
+CMakeFiles/server.dir/lib/slist.c.o.provides: CMakeFiles/server.dir/lib/slist.c.o.requires
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/lib/slist.c.o.provides.build
+.PHONY : CMakeFiles/server.dir/lib/slist.c.o.provides
 
-CMakeFiles/server.dir/slist.c.o.provides.build: CMakeFiles/server.dir/slist.c.o
+CMakeFiles/server.dir/lib/slist.c.o.provides.build: CMakeFiles/server.dir/lib/slist.c.o
 
 
 # Object files for target server
 server_OBJECTS = \
 "CMakeFiles/server.dir/server.c.o" \
-"CMakeFiles/server.dir/tp1opt.c.o" \
-"CMakeFiles/server.dir/slist.c.o"
+"CMakeFiles/server.dir/lib/tp1opt.c.o" \
+"CMakeFiles/server.dir/lib/slist.c.o"
 
 # External object files for target server
 server_EXTERNAL_OBJECTS =
 
 ../bin/server: CMakeFiles/server.dir/server.c.o
-../bin/server: CMakeFiles/server.dir/tp1opt.c.o
-../bin/server: CMakeFiles/server.dir/slist.c.o
+../bin/server: CMakeFiles/server.dir/lib/tp1opt.c.o
+../bin/server: CMakeFiles/server.dir/lib/slist.c.o
 ../bin/server: CMakeFiles/server.dir/build.make
 ../bin/server: CMakeFiles/server.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_4) "Linking C executable ../bin/server"
@@ -152,8 +152,8 @@ CMakeFiles/server.dir/build: ../bin/server
 .PHONY : CMakeFiles/server.dir/build
 
 CMakeFiles/server.dir/requires: CMakeFiles/server.dir/server.c.o.requires
-CMakeFiles/server.dir/requires: CMakeFiles/server.dir/tp1opt.c.o.requires
-CMakeFiles/server.dir/requires: CMakeFiles/server.dir/slist.c.o.requires
+CMakeFiles/server.dir/requires: CMakeFiles/server.dir/lib/tp1opt.c.o.requires
+CMakeFiles/server.dir/requires: CMakeFiles/server.dir/lib/slist.c.o.requires
 
 .PHONY : CMakeFiles/server.dir/requires
 

@@ -9,8 +9,8 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 #include <assert.h>
-#include "tp1opt.h"
-#include "slist.h"
+#include "lib/tp1opt.h"
+#include "lib/slist.h"
 
 #define BUFFER_MAX_SIZE 256
 

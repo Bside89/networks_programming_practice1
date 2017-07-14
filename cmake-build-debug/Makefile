@@ -179,6 +179,66 @@ client.c.s:
 	$(MAKE) -f CMakeFiles/client1.dir/build.make CMakeFiles/client1.dir/client.c.s
 .PHONY : client.c.s
 
+lib/slist.o: lib/slist.c.o
+
+.PHONY : lib/slist.o
+
+# target to build an object file
+lib/slist.c.o:
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/lib/slist.c.o
+.PHONY : lib/slist.c.o
+
+lib/slist.i: lib/slist.c.i
+
+.PHONY : lib/slist.i
+
+# target to preprocess a source file
+lib/slist.c.i:
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/lib/slist.c.i
+.PHONY : lib/slist.c.i
+
+lib/slist.s: lib/slist.c.s
+
+.PHONY : lib/slist.s
+
+# target to generate assembly for a file
+lib/slist.c.s:
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/lib/slist.c.s
+.PHONY : lib/slist.c.s
+
+lib/tp1opt.o: lib/tp1opt.c.o
+
+.PHONY : lib/tp1opt.o
+
+# target to build an object file
+lib/tp1opt.c.o:
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/lib/tp1opt.c.o
+	$(MAKE) -f CMakeFiles/client2.dir/build.make CMakeFiles/client2.dir/lib/tp1opt.c.o
+	$(MAKE) -f CMakeFiles/client1.dir/build.make CMakeFiles/client1.dir/lib/tp1opt.c.o
+.PHONY : lib/tp1opt.c.o
+
+lib/tp1opt.i: lib/tp1opt.c.i
+
+.PHONY : lib/tp1opt.i
+
+# target to preprocess a source file
+lib/tp1opt.c.i:
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/lib/tp1opt.c.i
+	$(MAKE) -f CMakeFiles/client2.dir/build.make CMakeFiles/client2.dir/lib/tp1opt.c.i
+	$(MAKE) -f CMakeFiles/client1.dir/build.make CMakeFiles/client1.dir/lib/tp1opt.c.i
+.PHONY : lib/tp1opt.c.i
+
+lib/tp1opt.s: lib/tp1opt.c.s
+
+.PHONY : lib/tp1opt.s
+
+# target to generate assembly for a file
+lib/tp1opt.c.s:
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/lib/tp1opt.c.s
+	$(MAKE) -f CMakeFiles/client2.dir/build.make CMakeFiles/client2.dir/lib/tp1opt.c.s
+	$(MAKE) -f CMakeFiles/client1.dir/build.make CMakeFiles/client1.dir/lib/tp1opt.c.s
+.PHONY : lib/tp1opt.c.s
+
 server.o: server.c.o
 
 .PHONY : server.o
@@ -206,66 +266,6 @@ server.c.s:
 	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/server.c.s
 .PHONY : server.c.s
 
-slist.o: slist.c.o
-
-.PHONY : slist.o
-
-# target to build an object file
-slist.c.o:
-	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/slist.c.o
-.PHONY : slist.c.o
-
-slist.i: slist.c.i
-
-.PHONY : slist.i
-
-# target to preprocess a source file
-slist.c.i:
-	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/slist.c.i
-.PHONY : slist.c.i
-
-slist.s: slist.c.s
-
-.PHONY : slist.s
-
-# target to generate assembly for a file
-slist.c.s:
-	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/slist.c.s
-.PHONY : slist.c.s
-
-tp1opt.o: tp1opt.c.o
-
-.PHONY : tp1opt.o
-
-# target to build an object file
-tp1opt.c.o:
-	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/tp1opt.c.o
-	$(MAKE) -f CMakeFiles/client2.dir/build.make CMakeFiles/client2.dir/tp1opt.c.o
-	$(MAKE) -f CMakeFiles/client1.dir/build.make CMakeFiles/client1.dir/tp1opt.c.o
-.PHONY : tp1opt.c.o
-
-tp1opt.i: tp1opt.c.i
-
-.PHONY : tp1opt.i
-
-# target to preprocess a source file
-tp1opt.c.i:
-	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/tp1opt.c.i
-	$(MAKE) -f CMakeFiles/client2.dir/build.make CMakeFiles/client2.dir/tp1opt.c.i
-	$(MAKE) -f CMakeFiles/client1.dir/build.make CMakeFiles/client1.dir/tp1opt.c.i
-.PHONY : tp1opt.c.i
-
-tp1opt.s: tp1opt.c.s
-
-.PHONY : tp1opt.s
-
-# target to generate assembly for a file
-tp1opt.c.s:
-	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/tp1opt.c.s
-	$(MAKE) -f CMakeFiles/client2.dir/build.make CMakeFiles/client2.dir/tp1opt.c.s
-	$(MAKE) -f CMakeFiles/client1.dir/build.make CMakeFiles/client1.dir/tp1opt.c.s
-.PHONY : tp1opt.c.s
-
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -280,15 +280,15 @@ help:
 	@echo "... client.o"
 	@echo "... client.i"
 	@echo "... client.s"
+	@echo "... lib/slist.o"
+	@echo "... lib/slist.i"
+	@echo "... lib/slist.s"
+	@echo "... lib/tp1opt.o"
+	@echo "... lib/tp1opt.i"
+	@echo "... lib/tp1opt.s"
 	@echo "... server.o"
 	@echo "... server.i"
 	@echo "... server.s"
-	@echo "... slist.o"
-	@echo "... slist.i"
-	@echo "... slist.s"
-	@echo "... tp1opt.o"
-	@echo "... tp1opt.i"
-	@echo "... tp1opt.s"
 .PHONY : help
 
 

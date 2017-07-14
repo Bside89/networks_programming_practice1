@@ -8,7 +8,7 @@
 #include <netdb.h>
 #include <signal.h>
 #include <pthread.h>
-#include "tp1opt.h"
+#include "lib/tp1opt.h"
 
 #define BUFFER_MAX_SIZE 256
 

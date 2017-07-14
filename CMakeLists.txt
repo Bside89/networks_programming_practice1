@@ -6,12 +6,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 
 set(GCC_PTHREAD_FLAG "-lpthread")
 
-#set(SOURCE_FILES server.c client.c tp1opt.c tp1opt.h)
-#add_executable(TP1 ${SOURCE_FILES})
-
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_PTHREAD_FLAG}")
 SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_PTHREAD_FLAG}")
 
-add_executable(client1 client.c tp1opt.c tp1opt.h)
-add_executable(client2 client.c tp1opt.c tp1opt.h)
-add_executable(server server.c tp1opt.c tp1opt.h slist.c slist.h)
+set(CLIENT_SOURCE_FILES client.c lib/tp1opt.c lib/tp1opt.h)
+set(SERVER_SOURCE_FILES server.c lib/tp1opt.c lib/tp1opt.h lib/slist.c lib/slist.h)
+
+add_executable(client1 ${CLIENT_SOURCE_FILES})
+add_executable(client2 ${CLIENT_SOURCE_FILES})
+add_executable(server ${SERVER_SOURCE_FILES})
