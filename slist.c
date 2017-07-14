@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 #include "slist.h"
 
 #define NULL_SOCKET -1
@@ -62,6 +63,7 @@ int slist_pop(slist* list, int sockfd) {
         if (list->conn_array[i].sockfd == sockfd) {
             list->conn_array[i] = closed_connection;
             list->size--;
+            close(sockfd); // Close socket
             break;
         }
     }
@@ -121,7 +123,10 @@ void slist_debug(slist *list) {
 
 
 void slist_destroy(slist** list) {
+    int i;
     if (list != NULL && *list != NULL) {
+        for (i = 0; i < (*list)->max_size; i++)
+            close((*list)->conn_array[i].sockfd); // Close all sockets on list
         free((*list)->conn_array);
         free(*list);
         *list = NULL;

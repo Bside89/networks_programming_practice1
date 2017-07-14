@@ -13,7 +13,7 @@
 #define BUFFER_MAX_SIZE 256
 
 
-int tcp_sockfd;
+volatile int is_exit = 0;
 
 
 void* cli_writer(void *arg);
@@ -24,7 +24,7 @@ void sigint_handler(int signum);
 
 void sigterm_handler(int signum);
 
-void print_n_exit(char *str);
+void print_n_close(char *str);
 
 
 struct cli_pthread_args {
@@ -42,8 +42,9 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
 
+    int sockfd;
     pid_t pid;
-    pthread_t threads[2];
+    pthread_t threads;
     struct hostent *server;
     struct sockaddr_in serv_addr;
     struct cli_pthread_args t_args;
@@ -51,8 +52,8 @@ int main(int argc, char** argv) {
     signal(SIGINT, sigint_handler);     // Signal handler for SIGINT
     signal(SIGTERM, sigterm_handler);   // Signal handler for SIGTERM
 
-    tcp_sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (tcp_sockfd < 0) {
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
         exit(1);
     }
@@ -70,13 +71,13 @@ int main(int argc, char** argv) {
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons((uint16_t) options.connection_port);
 
-    if (connect(tcp_sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
+    if (connect(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
         exit(1);
     }
 
     // Fill struct passed as argument in handlers
-    t_args.sockfd = tcp_sockfd;
+    t_args.sockfd = sockfd;
 
     if (options.parallelism_mode_opt == MULTIPROCESSING_MODE_SET) {
         pid = fork();
@@ -84,27 +85,22 @@ int main(int argc, char** argv) {
             fprintf(stderr, "ERROR forking process.\n");
             exit(1);
         }
-        if (pid == 0) { // Child process
+        if (pid == 0) { // Child process handles writing
             cli_writer((void*) &t_args);
-        } else {
+        } else {        // Father process handles reading
             cli_reader((void*) &t_args);
+            kill(pid, SIGINT);
         }
     } else {
-        if (pthread_create(&(threads[0]), NULL,
-                           cli_writer, (void*) &t_args) < 0) {
+        // New thread handles writing
+        if (pthread_create(&threads, NULL, cli_writer, (void*) &t_args) < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
             exit(1);
         }
-        if (pthread_create(&(threads[1]), NULL,
-                           cli_reader, (void*) &t_args) < 0) {
-            fprintf(stderr, "ERROR: %s\n", strerror(errno));
-            exit(1);
-        }
-        pthread_join(threads[0], NULL);
-        pthread_join(threads[1], NULL);
+        cli_reader((void*) &t_args); // Main thread handles reading
     }
 
-    close(tcp_sockfd);
+    close(sockfd);
 
     return 0;
 }
@@ -115,17 +111,17 @@ void* cli_reader(void *arg) {
     ssize_t rd;
     struct cli_pthread_args t_args = *((struct cli_pthread_args*) arg);
     char buffer[BUFFER_MAX_SIZE];
-    while (1) {
+    while (!is_exit) {
         memset(buffer, 0, sizeof(buffer));
         rd = read(t_args.sockfd, buffer, sizeof(buffer) - 1);
         if (rd  < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
             exit(1);
         } else if (rd == 0) {
-            puts("Closing connection");
+            puts("\nClosing connection.");
             exit(EXIT_SUCCESS);
         }
-        printf("Server >> %s\n", buffer);
+        printf("[SERVER]: %s\n", buffer);
     }
     return NULL;
 }
@@ -138,10 +134,10 @@ void* cli_writer(void *arg) {
     char* retvalue;
     char buffer[BUFFER_MAX_SIZE];
 
-    puts("Digite suas mensagens abaixo:");
-    while (1) {
+    while (!is_exit) {
 
         memset(buffer, 0, sizeof(buffer));
+        printf(">> ");
         do {
             retvalue = fgets(buffer, sizeof(buffer), stdin);
         } while (retvalue == NULL);
@@ -149,9 +145,9 @@ void* cli_writer(void *arg) {
         wt = write(t_args.sockfd, buffer, sizeof(buffer));
         if (wt < 0) {
             fprintf(stderr, "ERROR: %s\n", strerror(errno));
-            exit(1);
+            exit(EXIT_FAILURE);
         } else if (wt == 0) {
-            puts("Closing connection");
+            puts("\nClosing connection.");
             exit(EXIT_SUCCESS);
         }
     }
@@ -160,17 +156,16 @@ void* cli_writer(void *arg) {
 
 
 void sigint_handler(int signum) {
-    print_n_exit("SIGINT received. Exiting.");
+    print_n_close("SIGINT received. Exiting.\n");
 }
 
 
 void sigterm_handler(int signum) {
-    print_n_exit("SIGTERM received. Exiting.");
+    print_n_close("SIGTERM received. Exiting.\n");
 }
 
 
-void print_n_exit(char *str) {
-    puts(str);
-    close(tcp_sockfd);
-    exit(0);
+void print_n_close(char *str) {
+    write(STDOUT_FILENO, str, sizeof(str));
+    is_exit = 1;
 }
