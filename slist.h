@@ -13,9 +13,10 @@
 #define SLIST_MAX_SIZE_REACHED 1
 #define SLIST_EMPTY 2
 #define SLIST_ALLOCATION_ERROR 4
+#define SLIST_ALREADY_SET 5
 
 
-int slist_new(size_t size);
+int slist_start(size_t size);
 
 int slist_push(int sockfd, char* address);
 
@@ -29,9 +30,7 @@ unsigned long int slist_size();
 
 void slist_debug();
 
-int slist_is_allocated();
-
-void slist_destroy();
+void slist_finalize();
 
 
 #endif //TP1_SLIST_H

@@ -10,62 +10,84 @@
 #include "tp1opt.h"
 
 
-void debug_options(int is_server, struct netsettings* netconf);
+/* Struct containing infos about options chosen by user at startup
+ * */
+typedef struct netsettings {
+    int is_server;                  // Flag indicating server or client app;
+    int chat_mode_opt;              // Chat mode (UNIQUE or GROUP) (S.O.);
+    int parallelism_mode_opt;       // Par. mode (MULTIPROCESS or MULTITHREADING);
+    int transport_protocol_opt;     // Transport protocl used (TCP or UDP);
+    int connection_port;            // Port number used;
+    int max_connections_opt;        // Max number of connections accepted (S.O.);
+    char* interr_opt;               // Interruption for sending messages (C.O.);
+    char* ip_address;               // IPv4 address (C.O.);
+} net_opts;
 
-int is_option_valid(int mode);
+
+net_opts netconf; // All user settings will be stored here
+
+int netopt_is_set = 0; // Flag indicating if settings are (or not) set
 
 
-int set_options(int argc, char **argv, int is_server, struct netsettings* netconf) {
+void netopt_debug();
+
+int netopt_is_option_valid(int mode);
+
+
+int netopt_set(int argc, char **argv, int is_server) {
 
     int c, qty, index;
     const char* options;
     short cm_set = 0, pm_set = 0, tp_set = 0, cp_set = 0, mc_set = 0, io_set = 0;
 
-    netconf->is_server = is_server;
+    if (netopt_is_set)
+        return -1;
+
+    netconf.is_server = (is_server > 0) ? 1 : 0;
 
     // Defaults
-    options = (is_server) ? GETOPT_OPTIONS_SERVER : GETOPT_OPTIONS_CLIENT;
+    options = (netconf.is_server) ? GETOPT_OPTIONS_SERVER : GETOPT_OPTIONS_CLIENT;
 
-    netconf->chat_mode_opt = GROUP_MODE_SET;
-    netconf->parallelism_mode_opt = MULTIPROCESSING_MODE_SET;
-    netconf->transport_protocol_opt = SOCK_STREAM; // TCP
-    netconf->interr_opt = INT_MODE_ENTER;
+    netconf.chat_mode_opt = GROUP_MODE_SET;
+    netconf.parallelism_mode_opt = MULTIPROCESSING_MODE_SET;
+    netconf.transport_protocol_opt = SOCK_STREAM; // TCP
+    netconf.interr_opt = INT_MODE_ENTER;
 
     opterr = 0;
 
     while ((c = getopt (argc, argv, options)) != -1) {
         switch (c) {
             case OPT_UNIQUE:
-                if (!is_option_valid(cm_set))
+                if (!netopt_is_option_valid(cm_set))
                     return -1;
-                netconf->chat_mode_opt = UNIQUE_MODE_SET;
+                netconf.chat_mode_opt = UNIQUE_MODE_SET;
                 cm_set = 1;
                 break;
             case OPT_GROUP:
-                if (!is_option_valid(cm_set))
+                if (!netopt_is_option_valid(cm_set))
                     return -1;
-                netconf->chat_mode_opt = GROUP_MODE_SET;
+                netconf.chat_mode_opt = GROUP_MODE_SET;
                 cm_set = 1;
                 break;
             case OPT_FORK:
-                if (!is_option_valid(pm_set))
+                if (!netopt_is_option_valid(pm_set))
                     return -1;
-                netconf->parallelism_mode_opt = MULTIPROCESSING_MODE_SET;
+                netconf.parallelism_mode_opt = MULTIPROCESSING_MODE_SET;
                 pm_set = 1;
                 break;
             case OPT_THREAD:
-                if (!is_option_valid(pm_set))
+                if (!netopt_is_option_valid(pm_set))
                     return -1;
-                netconf->parallelism_mode_opt = MULTITHREADING_MODE_SET;
+                netconf.parallelism_mode_opt = MULTITHREADING_MODE_SET;
                 pm_set = 1;
                 break;
             case OPT_PROTOCOL_MODE:
-                if (!is_option_valid(tp_set))
+                if (!netopt_is_option_valid(tp_set))
                     return -1;
                 if (strcmp(optarg, PROT_MODE_TCP) == 0) {
-                    netconf->transport_protocol_opt = SOCK_STREAM;  // TCP
+                    netconf.transport_protocol_opt = SOCK_STREAM;  // TCP
                 } else if (strcmp(optarg, PROT_MODE_UDP) == 0) {
-                    netconf->transport_protocol_opt = SOCK_DGRAM;   // UDP
+                    netconf.transport_protocol_opt = SOCK_DGRAM;   // UDP
                 } else {
                     fprintf(stderr, "Invalid option: \"%s\" or \"%s\" must be used"
                                     " with -%c.\n",
@@ -75,13 +97,13 @@ int set_options(int argc, char **argv, int is_server, struct netsettings* netcon
                 tp_set = 1;
                 break;
             case OPT_PORT:              // (S.O.)
-                if (!is_option_valid(cp_set))
+                if (!netopt_is_option_valid(cp_set))
                     return -1;
-                netconf->connection_port = atoi(optarg);
+                netconf.connection_port = atoi(optarg);
                 cp_set = 1;
                 break;
             case OPT_MAX_CONNECTIONS:   // (S.O.)
-                if (!is_option_valid(mc_set))
+                if (!netopt_is_option_valid(mc_set))
                     return -1;
                 int mc = atoi(optarg);
                 if (mc <= 0) {
@@ -92,11 +114,11 @@ int set_options(int argc, char **argv, int is_server, struct netsettings* netcon
                             "(higher than 5).\n");
                     return -1;
                 }
-                netconf->max_connections_opt = mc;
+                netconf.max_connections_opt = mc;
                 mc_set = 1;
                 break;
             case OPT_INTERRUPTION:      // (C.O.)
-                if (!is_option_valid(io_set))
+                if (!netopt_is_option_valid(io_set))
                     return -1;
                 if (strcmp(optarg, INT_MODE_ENTER) != 0
                     && strcmp(optarg, INT_MODE_INTER) != 0) {
@@ -105,7 +127,7 @@ int set_options(int argc, char **argv, int is_server, struct netsettings* netcon
                             INT_MODE_ENTER, INT_MODE_INTER, OPT_INTERRUPTION);
                     return -1;
                 }
-                netconf->interr_opt = optarg;
+                netconf.interr_opt = optarg;
                 io_set = 1;
                 break;
             case '?':
@@ -118,7 +140,7 @@ int set_options(int argc, char **argv, int is_server, struct netsettings* netcon
                 exit(EXIT_FAILURE);
         }
     }
-    if (netconf->is_server) {
+    if (netconf.is_server) {
         if (!cp_set) {
             fprintf(stderr, "Port number (option '-%c') is required.\n",
                     OPT_PORT);
@@ -137,8 +159,8 @@ int set_options(int argc, char **argv, int is_server, struct netsettings* netcon
             fprintf(stderr, "Usage: %s [OPTIONS] [IP] [PORT]\n", argv[0]);
             return -1;
         }
-        netconf->ip_address = argv[argc - 2];
-        netconf->connection_port = atoi(argv[argc - 1]);
+        netconf.ip_address = argv[argc - 2];
+        netconf.connection_port = atoi(argv[argc - 1]);
     } else {
         if (qty != 0) {
             fprintf(stderr, "Usage: %s [OPTIONS]\n", argv[0]);
@@ -147,13 +169,74 @@ int set_options(int argc, char **argv, int is_server, struct netsettings* netcon
             return -1;
         }
     }
-    debug_options(is_server, netconf);
+    netopt_debug();
+    netopt_is_set = 1;
 
     return 0;
 }
 
 
-int is_option_valid(int mode) {
+int netopt_is_server() {
+    if (!netopt_is_set)
+        return NETOPT_OPTIONS_NOT_SET;
+    return netconf.is_server;
+}
+
+
+int netopt_get_chatmode() {
+    if (!netopt_is_set)
+        return NETOPT_OPTIONS_NOT_SET;
+    if (!netconf.is_server)
+        return NETOPT_OPTION_NOT_VALID;
+    return netconf.chat_mode_opt;
+}
+
+
+int netopt_get_parallelism_mode() {
+    if (!netopt_is_set)
+        return NETOPT_OPTIONS_NOT_SET;
+    return netconf.parallelism_mode_opt;
+}
+
+
+int netopt_get_transport_protocol() {
+    if (!netopt_is_set)
+        return NETOPT_OPTIONS_NOT_SET;
+    return netconf.transport_protocol_opt;
+}
+
+
+int netopt_get_port() {
+    if (!netopt_is_set)
+        return NETOPT_OPTIONS_NOT_SET;
+    return netconf.connection_port;
+}
+
+
+int netopt_get_max_connections_number() {
+    if (!netopt_is_set)
+        return NETOPT_OPTIONS_NOT_SET;
+    if (!netconf.is_server)
+        return NETOPT_OPTION_NOT_VALID;
+    return netconf.max_connections_opt;
+}
+
+
+char* netopt_get_interruption_key() {
+    if (!netopt_is_set || netconf.is_server)
+        return "";
+    return netconf.interr_opt;
+}
+
+
+char* netopt_get_ip_address() {
+    if (netconf.is_server)
+        return "";
+    return netconf.ip_address;
+}
+
+
+int netopt_is_option_valid(int mode) {
     if (mode) {
         fprintf(stderr, "Invalid options combinations.\n");
         return 0;
@@ -162,25 +245,28 @@ int is_option_valid(int mode) {
 }
 
 
-void debug_options(int is_server, struct netsettings* netconf) {
+void netopt_debug() {
 
-    printf("Application started in %s mode.\n", (is_server) ? "Server" : "Client");
+    printf("Application started in %s mode.\n",
+           (netconf.is_server) ? "Server" : "Client");
     printf("%s mode is used.\n",
-           (netconf->chat_mode_opt == UNIQUE_MODE_SET) ? "Unique" : "Group");
+           (netconf.chat_mode_opt == UNIQUE_MODE_SET) ? "Unique" : "Group");
     printf("%s mode is used.\n",
-            (netconf->parallelism_mode_opt == MULTITHREADING_MODE_SET) ?
+            (netconf.parallelism_mode_opt == MULTITHREADING_MODE_SET) ?
             "Multithreading" : "Multiprocessing");
     printf("%s protocol is used.\n",
-           (netconf->transport_protocol_opt == SOCK_DGRAM) ? "UDP" : "TCP");
-    if (is_server) {
-        printf("Max connections: %d.\n", netconf->max_connections_opt);
+           (netconf.transport_protocol_opt == SOCK_DGRAM) ? "UDP" : "TCP");
+    if (netconf.is_server) {
+        printf("Max connections: %d.\n", netconf.max_connections_opt);
     } else {
-        printf("Interruption: \"%s\" is used.\n", netconf->interr_opt);
-        printf("IP %s is used.\n", netconf->ip_address);
+        printf("Interruption: \"%s\" is used.\n", netconf.interr_opt);
+        printf("IP %s is used.\n", netconf.ip_address);
     }
-    printf("Port %d is used.\n", netconf->connection_port);
+    printf("Port %d is used.\n", netconf.connection_port);
 
 }
 
 
-
+void netopt_unset() {
+    netopt_is_set = 0;
+}

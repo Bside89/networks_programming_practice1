@@ -29,11 +29,9 @@ void print_n_close(char *str);
 
 int main(int argc, char** argv) {
 
-    struct netsettings options; // Struct for store program's settings
-
-    // Get all configs by user
-    if (set_options(argc, argv, 0, &options) < 0) {
+    if (netopt_set(argc, argv, 0) < 0) { // Get (allocate) all configs by user
         fprintf(stderr, "Exiting.\n");
+        netopt_unset();
         exit(EXIT_FAILURE);
     }
 
@@ -45,16 +43,16 @@ int main(int argc, char** argv) {
     signal(SIGINT, sigint_handler);     // Signal handler for SIGINT
     signal(SIGTERM, sigterm_handler);   // Signal handler for SIGTERM
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    sockfd = socket(AF_INET, netopt_get_transport_protocol(), 0);
     if (sockfd < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
-    server = gethostbyname(options.ip_address);
+    server = gethostbyname(netopt_get_ip_address());
     if (server == NULL) {
         fprintf(stderr, "ERROR, no such host\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     // Fill the server (serv_addr) struct
@@ -62,18 +60,18 @@ int main(int argc, char** argv) {
     memcpy((char*) &serv_addr.sin_addr.s_addr, server->h_addr,
            (size_t) server->h_length);
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons((uint16_t) options.connection_port);
+    serv_addr.sin_port = htons((uint16_t) netopt_get_port());
 
     if (connect(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
         exit(EXIT_FAILURE);
     }
 
-    if (options.parallelism_mode_opt == MULTIPROCESSING_MODE_SET) {
+    if (netopt_get_parallelism_mode() == MULTIPROCESSING_MODE_SET) {
         pid = fork();
         if (pid < 0) {
             fprintf(stderr, "ERROR forking process.\n");
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         if (pid == 0) { // Child process handles writing
             cli_writer((void*) &sockfd);
@@ -90,6 +88,7 @@ int main(int argc, char** argv) {
         cli_reader((void*) &sockfd); // Main thread handles reading
     }
 
+    netopt_unset();
     close(sockfd);
 
     return 0;
@@ -101,6 +100,7 @@ void* cli_reader(void *arg) {
     ssize_t rd;
     int sckt = *((int*) arg);
     char buffer[BUFFER_MAX_SIZE];
+
     while (1) {
         memset(buffer, 0, sizeof(buffer));
         rd = read(sckt, buffer, sizeof(buffer) - 1);
@@ -127,7 +127,6 @@ void* cli_writer(void *arg) {
     while (1) {
 
         memset(buffer, 0, sizeof(buffer));
-        printf(">>> ");
         do {
             retvalue = fgets(buffer, sizeof(buffer), stdin);
         } while (retvalue == NULL);

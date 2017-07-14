@@ -10,7 +10,7 @@
 // Options (getopt)
 
 #define GETOPT_OPTIONS_SERVER "ugftp:m:l:"
-#define GETOPT_OPTIONS_CLIENT "ugftm:s:"
+#define GETOPT_OPTIONS_CLIENT "ftm:s:"
 
 #define OPT_UNIQUE 'u'              // Unique mode;
 #define OPT_GROUP 'g'               // Group mode (default);
@@ -36,22 +36,29 @@
 #define MULTIPROCESSING_MODE_SET 0  // Default
 #define MULTITHREADING_MODE_SET 1
 
-
-/* Struct containing infos about options chosen by user at startup
- * */
-struct netsettings {
-    int is_server;                  // Flag indicating server or client app;
-    int chat_mode_opt;              // Chat mode (UNIQUE or GROUP);
-    int parallelism_mode_opt;       // Par. mode (MULTIPROCESS or MULTITHREADING);
-    int transport_protocol_opt;     // Transport protocl used (TCP or UDP);
-    int connection_port;            // Port number used;
-    int max_connections_opt;        // Max number of connections accepted (S.O.);
-    char* interr_opt;               // Interruption for sending messages (C.O.);
-    char* ip_address;               // IPv4 address (C.O.);
-};
+#define NETOPT_OPTION_NOT_VALID -1
+#define NETOPT_OPTIONS_NOT_SET -2
 
 
-int set_options(int argc, char **argv, int is_server, struct netsettings* netconf);
+int netopt_set(int argc, char **argv, int is_server);
+
+int netopt_is_server();
+
+int netopt_get_chatmode();
+
+int netopt_get_parallelism_mode();
+
+int netopt_get_transport_protocol();
+
+int netopt_get_port();
+
+int netopt_get_max_connections_number();
+
+char* netopt_get_interruption_key();
+
+char* netopt_get_ip_address();
+
+void netopt_unset();
 
 
 #endif //TP1_TP1OPT_H
