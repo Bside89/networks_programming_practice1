@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
     // Get socket from system
     sockfd = socket(AF_INET, netopt_get_transport_protocol(), 0);
     if (sockfd < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
+        perror("socket");
         exit(EXIT_FAILURE);
     }
 
@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
 
     // Bind address to socket
     if (bind(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
+        perror("bind");
         exit(EXIT_FAILURE);
     }
 
@@ -187,11 +187,6 @@ void* writer_handler(void *arg) {
         do {
             retvalue = fgets(buffer, sizeof(buffer), stdin);
         } while (retvalue == NULL);
-
-        if (strstr(buffer, "/finalize") != NULL) {
-            puts("Closing the server.");
-            kill(getppid(), SIGTERM);
-        }
         printf("Server >> %s\n", buffer);
     }
 
