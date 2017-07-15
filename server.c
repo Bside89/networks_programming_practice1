@@ -12,13 +12,24 @@
 #include "lib/tp1opt.h"
 #include "lib/slist.h"
 
+
 // Flag that indicate if it is time to shutdown (switched by signal handler)
 volatile int is_exit = 0;
 
-// Global, to avoid "value escapes local scope" warning;
-// Common to all threads / forked processes
+
+/* **************************************** */
+/* Global, to avoid "value escapes local scope" warning;
+ * Common to all threads / forked processes */
+
 fd_set active_sockets;
 
+int reader_writer_pipe[2];
+
+/* **************************************** */
+
+
+/* **************************************** */
+/* Functions used */
 
 void* reader_handler(void *arg);
 
@@ -34,7 +45,17 @@ void sigterm_handler(int signum);
 
 void print_n_close(char *str);
 
+/* **************************************** */
 
+
+/**
+ * Main program. Start a server for the message application.
+ *
+ * @param argc see manual usage for details
+ * @param argv see manual usage for details
+ *
+ * @return 0 if success, 1 if error occured
+ */
 int main(int argc, char** argv) {
 
     if (netopt_set(argc, argv, 1) < 0) { // Get (allocate) all configs by user
@@ -85,6 +106,12 @@ int main(int argc, char** argv) {
     // Initialize active connection's list
     slist_start((size_t) netopt_get_max_connections_number());
 
+    // Initialize pipe communication between reader and writer
+    if (pipe(reader_writer_pipe) < 0) {
+        perror("pipe");
+        exit(EXIT_FAILURE);
+    }
+
     // Parallelism (fork or new thread)
     if (netopt_get_parallelism_mode() == MULTIPROCESSING_MODE_SET) {
         pid = fork();
@@ -93,8 +120,11 @@ int main(int argc, char** argv) {
             exit(EXIT_FAILURE);
         }
         if (pid == 0) { // Child process (for writing handler)
+            close(reader_writer_pipe[1]); // Writer handler will not write nothing
             writer_handler(NULL);
             return 0;
+        } else {
+            close(reader_writer_pipe[0]); // Reader handler will not read nothing
         }
     } else {
         // New thread (for writing handler)
@@ -179,17 +209,26 @@ void accept_connections_handler(int listen_socket) {
 
 void* writer_handler(void *arg) {
 
-    char buffer[BUFFER_MAX_SIZE];
+    char log_buffer[BUFFER_MAX_SIZE + SLIST_ADDR_MAX_SIZE];
     char *retvalue;
 
     while (!is_exit) {
-        memset(buffer, 0, sizeof(buffer));
-        do {
-            retvalue = fgets(buffer, sizeof(buffer), stdin);
-        } while (retvalue == NULL);
-        printf("Server >> %s\n", buffer);
-    }
 
+        memset(log_buffer, 0, sizeof(log_buffer));
+
+        if (netopt_get_chatmode() == UNIQUE_MODE_SET) {
+            do {
+                retvalue = fgets(log_buffer, sizeof(log_buffer), stdin);
+            } while (retvalue == NULL);
+            printf("Server >> %s\n", log_buffer);
+        } else { // Receive message from reader
+            ssize_t rd = read(reader_writer_pipe[0], log_buffer, sizeof(log_buffer));
+            if (rd > 0) {
+                slist_sendall(log_buffer);
+                usleep(1000); // Time to strcpy complete in slist_sendall
+            }
+        }
+    }
     return NULL;
 }
 
@@ -221,8 +260,7 @@ void* reader_handler(void *arg) {
     memset(log_buffer, 0, sizeof(msg_buffer));
     sprintf(log_buffer, "[%s]: %s", address, msg_buffer);
     printf(log_buffer);
-    if (netopt_get_chatmode() == GROUP_MODE_SET)
-        slist_sendall(log_buffer);
+    write(reader_writer_pipe[1], log_buffer, sizeof(log_buffer)); // Send message to writer
 
     return NULL;
 }

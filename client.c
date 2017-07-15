@@ -13,8 +13,17 @@
 #define BUFFER_MAX_SIZE 256
 
 
+/* **************************************** */
+/* Global, to avoid "value escapes local scope" warning;
+ * Common to all threads / forked processes */
+
 int sockfd;
 
+/* **************************************** */
+
+
+/* **************************************** */
+/* Functions used */
 
 void* cli_writer(void *arg);
 
@@ -26,7 +35,17 @@ void sigterm_handler(int signum);
 
 void print_n_close(char *str);
 
+/* **************************************** */
 
+
+/**
+ * Main program. Start a client for the message application.
+ *
+ * @param argc see manual usage for details
+ * @param argv see manual usage for details
+ *
+ * @return 0 if success, 1 if error occured
+ */
 int main(int argc, char** argv) {
 
     if (netopt_set(argc, argv, 0) < 0) { // Get (allocate) all configs by user
