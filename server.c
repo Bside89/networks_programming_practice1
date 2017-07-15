@@ -12,8 +12,6 @@
 #include "lib/tp1opt.h"
 #include "lib/slist.h"
 
-#define BUFFER_MAX_SIZE 256
-
 // Flag that indicate if it is time to shutdown (switched by signal handler)
 volatile int is_exit = 0;
 
@@ -51,7 +49,8 @@ int main(int argc, char** argv) {
     int sockfd, newsockfd;
     int clilen = sizeof(cli_addr);
     int i, n;
-    char address[23];
+    char address[SLIST_ADDR_MAX_SIZE];
+    char bigbuffer[BUFFER_MAX_SIZE + SLIST_ADDR_MAX_SIZE];
 
     signal(SIGINT, sigint_handler);     // Signal handler for SIGINT
     signal(SIGTERM, sigterm_handler);   // Signal handler for SIGTERM
@@ -145,7 +144,11 @@ int main(int argc, char** argv) {
 
                 FD_SET(newsockfd, &active_sockets);
 
-                printf("Client %s has logged in.\n", address);
+                memset(&bigbuffer, 0, sizeof(bigbuffer));
+                sprintf(bigbuffer, "Client %s has logged in.\n", address);
+                printf(bigbuffer);
+                if (netopt_get_chatmode() == GROUP_MODE_SET)
+                    slist_sendall(bigbuffer);
 
             } else { // Get message from socket (TCP or UDP)
 
@@ -156,9 +159,9 @@ int main(int argc, char** argv) {
     close(sockfd);
     slist_finalize();    // Free allocated memory to slist
     netopt_unset();     // Free allocated memory to netopt
-    FD_ZERO(&active_sockets);
 
     puts("Bye!");
+
     return 0;
 }
 
@@ -188,10 +191,12 @@ void* writer_handler(void *arg) {
 void* reader_handler(void *arg) {
 
     int sockfd = *((int*) arg);
-    char buffer[BUFFER_MAX_SIZE];
+    char buffer[BUFFER_MAX_SIZE], anotherbuffer[BUFFER_MAX_SIZE +
+                                                SLIST_ADDR_MAX_SIZE];
     char *address = slist_get_address_by_socket(sockfd);
 
     memset(buffer, 0, sizeof(buffer));
+    memset(anotherbuffer, 0, sizeof(buffer));
 
     ssize_t rd = read(sockfd, buffer, sizeof(buffer));
     if (rd < 0) {
@@ -204,7 +209,10 @@ void* reader_handler(void *arg) {
         FD_CLR(sockfd, &active_sockets);
         return NULL;
     }
-    printf("[%s]: %s", address, buffer);
+    sprintf(anotherbuffer, "[%s]: %s", address, buffer);
+    printf(anotherbuffer);
+    if (netopt_get_chatmode() == GROUP_MODE_SET)
+        slist_sendall(anotherbuffer);
 
     return NULL;
 }

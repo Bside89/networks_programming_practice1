@@ -110,6 +110,23 @@ unsigned long int slist_size() {
 }
 
 
+int slist_sendall(char *msg) {
+
+    int i;
+    char buffer[BUFFER_MAX_SIZE + SLIST_ADDR_MAX_SIZE];
+
+    memset(&buffer, 0, sizeof(buffer));
+    strcpy(buffer, msg);
+
+    for (i = 0; i < list.max_size; i++) {
+        if (list.conn_array[i].sockfd != NULL_SOCKET) {
+            write(list.conn_array[i].sockfd, buffer, sizeof(buffer));
+        }
+    }
+    return 0;
+}
+
+
 void slist_debug() {
     int i;
     if (!slist_is_set) {

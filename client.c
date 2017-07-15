@@ -111,7 +111,7 @@ void* cli_reader(void *arg) {
             puts("\nClosing connection on reader.");
             break;
         }
-        printf("[SERVER]: %s\n", buffer);
+        printf(buffer);
     }
     return NULL;
 }
