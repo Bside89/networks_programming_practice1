@@ -24,6 +24,8 @@ void* reader_handler(void *arg);
 
 void* writer_handler(void *arg);
 
+void accept_connections_handler(int listen_socket);
+
 void send_unit_message(int sockfd, char *str);
 
 void sigint_handler(int signum);
@@ -45,11 +47,8 @@ int main(int argc, char** argv) {
     pid_t pid;
     pthread_t threads[2];
     struct sockaddr_in serv_addr;
-    struct sockaddr_in cli_addr;
-    int sockfd, newsockfd;
-    int clilen = sizeof(cli_addr);
-    int i, n;
-    char address[SLIST_ADDR_MAX_SIZE], buffer[BUFFER_MAX_SIZE + SLIST_ADDR_MAX_SIZE];
+    int sockfd;
+    int i;
 
     signal(SIGINT, sigint_handler);     // Signal handler for SIGINT
     signal(SIGTERM, sigterm_handler);   // Signal handler for SIGTERM
@@ -90,7 +89,7 @@ int main(int argc, char** argv) {
     if (netopt_get_parallelism_mode() == MULTIPROCESSING_MODE_SET) {
         pid = fork();
         if (pid < 0) {
-            fprintf(stderr, "ERROR forking process.\n");
+            perror("fork");
             exit(EXIT_FAILURE);
         }
         if (pid == 0) { // Child process (for writing handler)
@@ -100,7 +99,7 @@ int main(int argc, char** argv) {
     } else {
         // New thread (for writing handler)
         if (pthread_create(&(threads[0]), NULL, writer_handler, NULL) < 0) {
-            fprintf(stderr, "ERROR: %s\n", strerror(errno));
+            perror("pthread_create");
             exit(EXIT_FAILURE);
         }
     }
@@ -112,7 +111,7 @@ int main(int argc, char** argv) {
 
         // I/O multiplexing
         if (select(FD_SETSIZE, &read_sockets, NULL, NULL, NULL) < 0) {
-            puts("No more inputs. Server went down.");
+            puts("No more inputs. Server is shutting down.");
             break;
         }
         for (i = 0; i < FD_SETSIZE; i++) {
@@ -122,32 +121,7 @@ int main(int argc, char** argv) {
             // Accept incoming connections (in TCP)
             if (i == sockfd && netopt_get_transport_protocol() == SOCK_STREAM) {
 
-                newsockfd = accept(sockfd, (struct sockaddr*) &cli_addr,
-                                       (unsigned int*) &clilen);
-                if (newsockfd < 0) {
-                    fprintf(stderr, "ERROR: %s\n", strerror(errno));
-                    exit(EXIT_FAILURE);
-                }
-
-                // Fill struct (conn_t) passed as argument in handlers
-                memset(&address, 0, sizeof(address));
-                sprintf(address, "%s:%hu", inet_ntoa(cli_addr.sin_addr),
-                        ntohs(cli_addr.sin_port));
-
-                n = slist_push(newsockfd, address); // Insert into list
-                if (n == SLIST_MAX_SIZE_REACHED) {
-                    send_unit_message(newsockfd, "Max connections reached. "
-                            "Connection refused.\n");
-                    continue;
-                }
-
-                FD_SET(newsockfd, &active_sockets);
-
-                memset(&buffer, 0, sizeof(buffer));
-                sprintf(buffer, "Client %s has logged in.\n", address);
-                printf(buffer);
-                if (netopt_get_chatmode() == GROUP_MODE_SET)
-                    slist_sendall(buffer);
+                accept_connections_handler(sockfd);
 
             } else { // Get message from socket (TCP or UDP)
 
@@ -162,6 +136,44 @@ int main(int argc, char** argv) {
     puts("Bye!");
 
     return 0;
+}
+
+
+void accept_connections_handler(int listen_socket) {
+
+    char address[SLIST_ADDR_MAX_SIZE];
+    char log_buffer[BUFFER_MAX_SIZE + SLIST_ADDR_MAX_SIZE];
+    struct sockaddr_in cli_addr;
+    int n, clilen = sizeof(cli_addr);
+
+    int newsockfd = accept(listen_socket, (struct sockaddr*) &cli_addr,
+                       (unsigned int*) &clilen);
+    if (newsockfd < 0) {
+        perror("accept");
+        exit(EXIT_FAILURE);
+    }
+
+    // Fill data to insert in connection's list
+    memset(&address, 0, sizeof(address));
+    sprintf(address, "%s:%hu", inet_ntoa(cli_addr.sin_addr),
+            ntohs(cli_addr.sin_port));
+
+    n = slist_push(newsockfd, address); // Insert into list
+    if (n == SLIST_MAX_SIZE_REACHED) {
+        send_unit_message(newsockfd, "Max connections reached. "
+                "Connection refused.\n");
+        return;
+    }
+
+    FD_SET(newsockfd, &active_sockets);
+
+    // Fill log_buffer to format message
+    memset(&log_buffer, 0, sizeof(log_buffer));
+    sprintf(log_buffer, "Client %s has logged in.\n", address);
+    printf(log_buffer);
+    if (netopt_get_chatmode() == GROUP_MODE_SET)
+        slist_sendall(log_buffer);
+
 }
 
 

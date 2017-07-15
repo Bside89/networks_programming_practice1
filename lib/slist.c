@@ -148,7 +148,7 @@ void slist_debug() {
 
 int slist_close(int sockfd) {
 
-    ssize_t wt = write(sockfd, "Server shutting down.", 23);
+    ssize_t wt = write(sockfd, "Server is shutting down.", 23);
     if (wt <= 0) {
         return 1;
     }
