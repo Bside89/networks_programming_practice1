@@ -39,8 +39,6 @@ unistd.h
 -
 
 /home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/server.c
-errno.h
--
 stdio.h
 -
 stdlib.h

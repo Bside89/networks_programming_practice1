@@ -1,4 +1,3 @@
-#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -10,7 +9,7 @@
 #include <pthread.h>
 #include "lib/tp1opt.h"
 
-#define MSG_BUFFER_MAX_SIZE 256
+#define MSG_BUFFER_SIZE 256
 
 
 /* **************************************** */
@@ -123,7 +122,7 @@ void* cli_reader(void *arg) {
 
     ssize_t rd;
     int sckt = *((int*) arg);
-    char buffer[MSG_BUFFER_MAX_SIZE];
+    char buffer[MSG_BUFFER_SIZE];
 
     while (1) {
         memset(buffer, 0, sizeof(buffer));
@@ -146,7 +145,7 @@ void* cli_writer(void *arg) {
     ssize_t wt;
     int sckt = *((int*) arg);
     char* retvalue;
-    char buffer[MSG_BUFFER_MAX_SIZE];
+    char buffer[MSG_BUFFER_SIZE];
 
     while (1) {
 
@@ -181,5 +180,6 @@ void sigterm_handler(int signum) {
 void print_n_close(char *str) {
     puts(str);
     close(sockfd);
+    sleep(1);
     exit(EXIT_SUCCESS);
 }

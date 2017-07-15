@@ -1,4 +1,3 @@
-#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -39,6 +38,9 @@ void accept_connections_handler(int listen_socket);
 
 void send_unit_message(int sockfd, char *str);
 
+int locate_addressee(char *srvaddr, char (*msgbuffer)[LOG_BUFFER_SIZE],
+                       char (*address)[SLIST_ADDR_MAX_SIZE]);
+
 void sigint_handler(int signum);
 
 void sigterm_handler(int signum);
@@ -70,6 +72,7 @@ int main(int argc, char** argv) {
     struct sockaddr_in serv_addr;
     int sockfd;
     int i;
+    char server_address[SLIST_ADDR_MAX_SIZE];
 
     signal(SIGINT, sigint_handler);     // Signal handler for SIGINT
     signal(SIGTERM, sigterm_handler);   // Signal handler for SIGTERM
@@ -91,6 +94,11 @@ int main(int argc, char** argv) {
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons((uint16_t) netopt_get_port());
+
+    // Fill server data to the correct format message
+    memset(&server_address, 0, sizeof(server_address));
+    sprintf(server_address, "%s:%hu", inet_ntoa(serv_addr.sin_addr),
+            ntohs(serv_addr.sin_port));
 
     // Bind address to socket
     if (bind(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
@@ -128,7 +136,8 @@ int main(int argc, char** argv) {
         }
     } else {
         // New thread (for writing handler)
-        if (pthread_create(&(threads[0]), NULL, writer_handler, NULL) < 0) {
+        if (pthread_create(&(threads[0]), NULL, writer_handler,
+                           (void*) server_address) < 0) {
             perror("pthread_create");
             exit(EXIT_FAILURE);
         }
@@ -146,15 +155,12 @@ int main(int argc, char** argv) {
         }
         for (i = 0; i < FD_SETSIZE; i++) {
 
-            if (!FD_ISSET(i, &read_sockets)) continue;
-
+            if (!FD_ISSET(i, &read_sockets))
+                continue;
             // Accept incoming connections (in TCP)
             if (i == sockfd && netopt_get_transport_protocol() == SOCK_STREAM) {
-
                 accept_connections_handler(sockfd);
-
             } else { // Get message from socket (TCP or UDP)
-
                 reader_handler((void*) &i);
             }
         }
@@ -172,7 +178,7 @@ int main(int argc, char** argv) {
 void accept_connections_handler(int listen_socket) {
 
     char address[SLIST_ADDR_MAX_SIZE];
-    char log_buffer[MSG_BUFFER_MAX_SIZE + SLIST_ADDR_MAX_SIZE];
+    char log_buffer[MSG_BUFFER_SIZE + SLIST_ADDR_MAX_SIZE];
     struct sockaddr_in cli_addr;
     int clilen = sizeof(cli_addr);
 
@@ -210,8 +216,11 @@ void accept_connections_handler(int listen_socket) {
 
 void* writer_handler(void *arg) {
 
-    char log_buffer[LOG_BUFFER_MAX_SIZE];
+    char log_buffer[LOG_BUFFER_SIZE];
+    char addr[SLIST_ADDR_MAX_SIZE];
     char *retvalue;
+    char *server_address = (char*) arg;
+    int sockfd;
 
     while (!is_exit) {
 
@@ -222,6 +231,25 @@ void* writer_handler(void *arg) {
                 retvalue = fgets(log_buffer, sizeof(log_buffer), stdin);
             } while (retvalue == NULL);
             printf("Server >> %s\n", log_buffer);
+            if (locate_addressee(server_address, &log_buffer, &addr) < 0) {
+                puts("Message not send due to incorrect format.");
+                continue;
+            }
+            sockfd = slist_get_socket_by_address(addr);
+            if (sockfd == NULL_SOCKET) {
+                puts("Client not found or not connected. (error on get socket");
+                continue;
+            }
+            ssize_t wt = write(sockfd, log_buffer, sizeof(log_buffer));
+            if (wt < 0) {
+                perror("read");
+                exit(EXIT_FAILURE);
+            } else if (wt == 0) {
+                puts("Client not found or not connected. (error on write)");
+                continue;
+            }
+            printf(log_buffer);
+
         } else { // Receive message from reader
             ssize_t rd = read(reader_writer_pipe[0], log_buffer, sizeof(log_buffer));
             if (rd > 0) {
@@ -236,7 +264,7 @@ void* writer_handler(void *arg) {
 void* reader_handler(void *arg) {
 
     int sockfd = *((int*) arg);
-    char msg_buffer[MSG_BUFFER_MAX_SIZE], log_buffer[LOG_BUFFER_MAX_SIZE];
+    char msg_buffer[MSG_BUFFER_SIZE], log_buffer[LOG_BUFFER_SIZE];
     char *address = slist_get_address_by_socket(sockfd);
 
     memset(msg_buffer, 0, sizeof(msg_buffer));
@@ -278,6 +306,38 @@ void send_unit_message(int sockfd, char *str) {
         assert(n == SLIST_OK);
         FD_CLR(sockfd, &active_sockets);
     }
+}
+
+
+int locate_addressee(char *srvaddr, char (*msgbuffer)[LOG_BUFFER_SIZE],
+                       char (*address)[SLIST_ADDR_MAX_SIZE]) {
+
+    char *init = NULL, *end = NULL;
+    char space = ' ';
+    char localbuffer[LOG_BUFFER_SIZE];
+
+    if (strstr(*msgbuffer, ":~$ ") != *msgbuffer)
+        return -1;
+
+    memset(localbuffer, 0, sizeof(localbuffer));
+    memset(address, 0, sizeof(*address));
+    strcpy(localbuffer, *msgbuffer);
+
+    init = strchr(localbuffer, space);
+    if (init == NULL)
+        return -1;
+    init++;
+    end = strchr(init+1, space);
+    if (end == NULL)
+        return -1;
+    end++;
+    size_t tam = strlen(init) - strlen(end) - 1;
+
+    strncpy(*address, init, tam);
+    memset(*msgbuffer, 0, LOG_BUFFER_SIZE);
+    sprintf(*msgbuffer, "[%s]: %s", srvaddr, end);
+
+    return 0;
 }
 
 

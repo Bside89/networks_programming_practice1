@@ -26,8 +26,6 @@ slist list; // All connections will be stored here
 
 int slist_is_set = 0; // Flag indicating if settings are (or not) set
 
-const conn_t closed_connection = {NULL_SOCKET, ""};
-
 
 int slist_close(int sockfd);
 
@@ -45,7 +43,7 @@ int slist_start(size_t size) {
     int i;
 
     for (i = 0; i < size; i++) {
-        list.conn_array[i] = closed_connection;
+        list.conn_array[i].sockfd = NULL_SOCKET;
     }
     slist_is_set = 1;
     return SLIST_OK;
@@ -59,6 +57,8 @@ int slist_push(int sockfd, char* address) {
     for (i = 0; i < list.max_size; i++) {
         if (list.conn_array[i].sockfd == NULL_SOCKET) {
             list.conn_array[i].sockfd = sockfd;
+            memset(list.conn_array[i].address, 0,
+                   sizeof(list.conn_array[i].address));
             strcpy(list.conn_array[i].address, address);
             list.size++;
             break;
@@ -74,7 +74,7 @@ int slist_pop(int sockfd) {
         return SLIST_EMPTY;
     for (i = 0; i < list.max_size; i++) {
         if (list.conn_array[i].sockfd == sockfd) {
-            list.conn_array[i] = closed_connection;
+            list.conn_array[i].sockfd = NULL_SOCKET;
             list.size--;
             slist_close(sockfd); // Close socket
             break;
@@ -119,14 +119,14 @@ int slist_is_full() {
 int slist_sendall(char *msg) {
 
     int i;
-    char buffer[MSG_BUFFER_MAX_SIZE + SLIST_ADDR_MAX_SIZE];
+    char log_buffer[LOG_BUFFER_SIZE];
 
-    memset(&buffer, 0, sizeof(buffer));
-    strcpy(buffer, msg);
+    memset(&log_buffer, 0, sizeof(log_buffer));
+    strcpy(log_buffer, msg);
 
     for (i = 0; i < list.max_size; i++) {
         if (list.conn_array[i].sockfd != NULL_SOCKET) {
-            write(list.conn_array[i].sockfd, buffer, sizeof(buffer));
+            write(list.conn_array[i].sockfd, log_buffer, sizeof(log_buffer));
         }
     }
     return 0;
