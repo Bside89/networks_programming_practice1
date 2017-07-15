@@ -49,8 +49,7 @@ int main(int argc, char** argv) {
     int sockfd, newsockfd;
     int clilen = sizeof(cli_addr);
     int i, n;
-    char address[SLIST_ADDR_MAX_SIZE];
-    char bigbuffer[BUFFER_MAX_SIZE + SLIST_ADDR_MAX_SIZE];
+    char address[SLIST_ADDR_MAX_SIZE], buffer[BUFFER_MAX_SIZE + SLIST_ADDR_MAX_SIZE];
 
     signal(SIGINT, sigint_handler);     // Signal handler for SIGINT
     signal(SIGTERM, sigterm_handler);   // Signal handler for SIGTERM
@@ -144,11 +143,11 @@ int main(int argc, char** argv) {
 
                 FD_SET(newsockfd, &active_sockets);
 
-                memset(&bigbuffer, 0, sizeof(bigbuffer));
-                sprintf(bigbuffer, "Client %s has logged in.\n", address);
-                printf(bigbuffer);
+                memset(&buffer, 0, sizeof(buffer));
+                sprintf(buffer, "Client %s has logged in.\n", address);
+                printf(buffer);
                 if (netopt_get_chatmode() == GROUP_MODE_SET)
-                    slist_sendall(bigbuffer);
+                    slist_sendall(buffer);
 
             } else { // Get message from socket (TCP or UDP)
 
@@ -157,7 +156,7 @@ int main(int argc, char** argv) {
         }
     }
     close(sockfd);
-    slist_finalize();    // Free allocated memory to slist
+    slist_finalize();   // Free allocated memory to slist
     netopt_unset();     // Free allocated memory to netopt
 
     puts("Bye!");
@@ -191,28 +190,32 @@ void* writer_handler(void *arg) {
 void* reader_handler(void *arg) {
 
     int sockfd = *((int*) arg);
-    char buffer[BUFFER_MAX_SIZE], anotherbuffer[BUFFER_MAX_SIZE +
+    char msg_buffer[BUFFER_MAX_SIZE], log_buffer[BUFFER_MAX_SIZE +
                                                 SLIST_ADDR_MAX_SIZE];
     char *address = slist_get_address_by_socket(sockfd);
 
-    memset(buffer, 0, sizeof(buffer));
-    memset(anotherbuffer, 0, sizeof(buffer));
+    memset(msg_buffer, 0, sizeof(msg_buffer));
 
-    ssize_t rd = read(sockfd, buffer, sizeof(buffer));
+    ssize_t rd = read(sockfd, msg_buffer, sizeof(msg_buffer));
     if (rd < 0) {
         fprintf(stderr, "ERROR: %s\n", strerror(errno));
         exit(EXIT_FAILURE);
     } else if (rd == 0) {
-        printf("Client %s has logged out.\n", address);
+        memset(log_buffer, 0, sizeof(msg_buffer));
+        sprintf(log_buffer, "Client %s has logged out.\n", address);
+        printf(log_buffer);
+        if (netopt_get_chatmode() == GROUP_MODE_SET)
+            slist_sendall(log_buffer);
         int n = slist_pop(sockfd); // Close occurs here
         assert(n == SLIST_OK);
         FD_CLR(sockfd, &active_sockets);
         return NULL;
     }
-    sprintf(anotherbuffer, "[%s]: %s", address, buffer);
-    printf(anotherbuffer);
+    memset(log_buffer, 0, sizeof(msg_buffer));
+    sprintf(log_buffer, "[%s]: %s", address, msg_buffer);
+    printf(log_buffer);
     if (netopt_get_chatmode() == GROUP_MODE_SET)
-        slist_sendall(anotherbuffer);
+        slist_sendall(log_buffer);
 
     return NULL;
 }
