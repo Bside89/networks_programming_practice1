@@ -200,10 +200,11 @@ void accept_connections_handler(int listen_socket) {
     // Fill log_buffer to format message
     memset(&log_buffer, 0, sizeof(log_buffer));
     sprintf(log_buffer, "Client %s has logged in.\n", address);
-    printf(log_buffer);
-    if (netopt_get_chatmode() == GROUP_MODE_SET)
-        slist_sendall(log_buffer);
 
+    if (netopt_get_chatmode() == GROUP_MODE_SET) // Send message to writer
+        write(reader_writer_pipe[1], log_buffer, sizeof(log_buffer));
+
+    printf(log_buffer);
 }
 
 
@@ -225,7 +226,6 @@ void* writer_handler(void *arg) {
             ssize_t rd = read(reader_writer_pipe[0], log_buffer, sizeof(log_buffer));
             if (rd > 0) {
                 slist_sendall(log_buffer);
-                usleep(1000); // Time to strcpy complete in slist_sendall
             }
         }
     }
@@ -260,7 +260,9 @@ void* reader_handler(void *arg) {
     memset(log_buffer, 0, sizeof(msg_buffer));
     sprintf(log_buffer, "[%s]: %s", address, msg_buffer);
     printf(log_buffer);
-    write(reader_writer_pipe[1], log_buffer, sizeof(log_buffer)); // Send message to writer
+
+    // Send message to writer
+    write(reader_writer_pipe[1], log_buffer, sizeof(log_buffer));
 
     return NULL;
 }
