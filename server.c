@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
 
-    // Parallelism (fork or new thread)
+    // Bifurcation (fork or thread)
     if (netopt_get_parallelism_mode() == MULTIPROCESSING_MODE_SET) {
         pid = fork();
         if (pid < 0) {
@@ -172,9 +172,9 @@ int main(int argc, char** argv) {
 void accept_connections_handler(int listen_socket) {
 
     char address[SLIST_ADDR_MAX_SIZE];
-    char log_buffer[BUFFER_MAX_SIZE + SLIST_ADDR_MAX_SIZE];
+    char log_buffer[MSG_BUFFER_MAX_SIZE + SLIST_ADDR_MAX_SIZE];
     struct sockaddr_in cli_addr;
-    int n, clilen = sizeof(cli_addr);
+    int clilen = sizeof(cli_addr);
 
     int newsockfd = accept(listen_socket, (struct sockaddr*) &cli_addr,
                        (unsigned int*) &clilen);
@@ -188,8 +188,8 @@ void accept_connections_handler(int listen_socket) {
     sprintf(address, "%s:%hu", inet_ntoa(cli_addr.sin_addr),
             ntohs(cli_addr.sin_port));
 
-    n = slist_push(newsockfd, address); // Insert into list
-    if (n == SLIST_MAX_SIZE_REACHED) {
+    // Insert into list
+    if (slist_push(newsockfd, address) == SLIST_MAX_SIZE_REACHED) {
         send_unit_message(newsockfd, "Max connections reached. "
                 "Connection refused.\n");
         return;
@@ -210,7 +210,7 @@ void accept_connections_handler(int listen_socket) {
 
 void* writer_handler(void *arg) {
 
-    char log_buffer[BUFFER_MAX_SIZE + SLIST_ADDR_MAX_SIZE];
+    char log_buffer[LOG_BUFFER_MAX_SIZE];
     char *retvalue;
 
     while (!is_exit) {
@@ -236,22 +236,21 @@ void* writer_handler(void *arg) {
 void* reader_handler(void *arg) {
 
     int sockfd = *((int*) arg);
-    char msg_buffer[BUFFER_MAX_SIZE], log_buffer[BUFFER_MAX_SIZE +
-                                                SLIST_ADDR_MAX_SIZE];
+    char msg_buffer[MSG_BUFFER_MAX_SIZE], log_buffer[LOG_BUFFER_MAX_SIZE];
     char *address = slist_get_address_by_socket(sockfd);
 
     memset(msg_buffer, 0, sizeof(msg_buffer));
 
     ssize_t rd = read(sockfd, msg_buffer, sizeof(msg_buffer));
     if (rd < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
+        perror("read");
         exit(EXIT_FAILURE);
     } else if (rd == 0) {
         memset(log_buffer, 0, sizeof(msg_buffer));
         sprintf(log_buffer, "Client %s has logged out.\n", address);
         printf(log_buffer);
         if (netopt_get_chatmode() == GROUP_MODE_SET)
-            slist_sendall(log_buffer);
+            write(reader_writer_pipe[1], log_buffer, sizeof(log_buffer));
         int n = slist_pop(sockfd); // Close occurs here
         assert(n == SLIST_OK);
         FD_CLR(sockfd, &active_sockets);
@@ -272,7 +271,7 @@ void send_unit_message(int sockfd, char *str) {
 
     ssize_t wd = write(sockfd, str, sizeof(str));
     if (wd < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
+        perror("write");
         exit(EXIT_FAILURE);
     } else if (wd == 0) {
         int n = slist_pop(sockfd); // Close occurs here

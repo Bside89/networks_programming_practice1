@@ -10,7 +10,7 @@
 #include <pthread.h>
 #include "lib/tp1opt.h"
 
-#define BUFFER_MAX_SIZE 256
+#define MSG_BUFFER_MAX_SIZE 256
 
 
 /* **************************************** */
@@ -54,6 +54,7 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
 
+    // Vars initialization
     pid_t pid;
     pthread_t threads;
     struct hostent *server;
@@ -62,15 +63,17 @@ int main(int argc, char** argv) {
     signal(SIGINT, sigint_handler);     // Signal handler for SIGINT
     signal(SIGTERM, sigterm_handler);   // Signal handler for SIGTERM
 
+    // Get socket from system
     sockfd = socket(AF_INET, netopt_get_transport_protocol(), 0);
     if (sockfd < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
+        perror("socket");
         exit(EXIT_FAILURE);
     }
 
+    // Get host info by IP and port provided
     server = gethostbyname(netopt_get_ip_address());
     if (server == NULL) {
-        fprintf(stderr, "ERROR, no such host\n");
+        fprintf(stderr, "Error: No such host.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -81,15 +84,17 @@ int main(int argc, char** argv) {
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons((uint16_t) netopt_get_port());
 
+    // Connect to the server
     if (connect(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
-        fprintf(stderr, "ERROR: %s\n", strerror(errno));
+        perror("connect");
         exit(EXIT_FAILURE);
     }
 
+    // Bifurcation (fork or thread)
     if (netopt_get_parallelism_mode() == MULTIPROCESSING_MODE_SET) {
         pid = fork();
         if (pid < 0) {
-            fprintf(stderr, "ERROR forking process.\n");
+            perror("fork");
             exit(EXIT_FAILURE);
         }
         if (pid == 0) { // Child process handles writing
@@ -101,7 +106,7 @@ int main(int argc, char** argv) {
     } else {
         // New thread handles writing
         if (pthread_create(&threads, NULL, cli_writer, (void*) &sockfd) < 0) {
-            fprintf(stderr, "ERROR: %s\n", strerror(errno));
+            perror("pthread_create");
             exit(EXIT_FAILURE);
         }
         cli_reader((void*) &sockfd); // Main thread handles reading
@@ -118,13 +123,13 @@ void* cli_reader(void *arg) {
 
     ssize_t rd;
     int sckt = *((int*) arg);
-    char buffer[BUFFER_MAX_SIZE];
+    char buffer[MSG_BUFFER_MAX_SIZE];
 
     while (1) {
         memset(buffer, 0, sizeof(buffer));
         rd = read(sckt, buffer, sizeof(buffer) - 1);
         if (rd  < 0) {
-            fprintf(stderr, "ERROR: %s\n", strerror(errno));
+            perror("read");
             break;
         } else if (rd == 0) {
             puts("\nClosing connection on reader.");
@@ -141,7 +146,7 @@ void* cli_writer(void *arg) {
     ssize_t wt;
     int sckt = *((int*) arg);
     char* retvalue;
-    char buffer[BUFFER_MAX_SIZE];
+    char buffer[MSG_BUFFER_MAX_SIZE];
 
     while (1) {
 
@@ -152,7 +157,7 @@ void* cli_writer(void *arg) {
 
         wt = write(sckt, buffer, sizeof(buffer));
         if (wt < 0) {
-            fprintf(stderr, "ERROR: %s\n", strerror(errno));
+            perror("write");
             break;
         } else if (wt == 0) {
             puts("\nClosing connection on writer.");

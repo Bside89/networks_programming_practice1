@@ -8,8 +8,9 @@
 #define NULL_SOCKET -1
 #define NULL_ADDRESS ""
 
-#define BUFFER_MAX_SIZE 256
+#define MSG_BUFFER_MAX_SIZE 256
 #define SLIST_ADDR_MAX_SIZE 30 // IP and Port used on print
+#define LOG_BUFFER_MAX_SIZE SLIST_ADDR_MAX_SIZE + MSG_BUFFER_MAX_SIZE
 
 #define SLIST_OK 0
 #define SLIST_MAX_SIZE_REACHED 1
@@ -29,6 +30,8 @@ char* slist_get_address_by_socket(int sockfd);
 int slist_get_socket_by_address(char *address);
 
 unsigned long int slist_size();
+
+int slist_is_full();
 
 int slist_sendall(char *msg);
 

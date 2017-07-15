@@ -43,6 +43,7 @@ int slist_start(size_t size) {
         return SLIST_ALLOCATION_ERROR;
     }
     int i;
+
     for (i = 0; i < size; i++) {
         list.conn_array[i] = closed_connection;
     }
@@ -53,7 +54,7 @@ int slist_start(size_t size) {
 
 int slist_push(int sockfd, char* address) {
     int i;
-    if (list.size == list.max_size)
+    if (slist_is_full())
         return SLIST_MAX_SIZE_REACHED;
     for (i = 0; i < list.max_size; i++) {
         if (list.conn_array[i].sockfd == NULL_SOCKET) {
@@ -110,10 +111,15 @@ unsigned long int slist_size() {
 }
 
 
+int slist_is_full() {
+    return list.size == list.max_size;
+}
+
+
 int slist_sendall(char *msg) {
 
     int i;
-    char buffer[BUFFER_MAX_SIZE + SLIST_ADDR_MAX_SIZE];
+    char buffer[MSG_BUFFER_MAX_SIZE + SLIST_ADDR_MAX_SIZE];
 
     memset(&buffer, 0, sizeof(buffer));
     strcpy(buffer, msg);
