@@ -206,6 +206,39 @@ lib/slist.c.s:
 	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/lib/slist.c.s
 .PHONY : lib/slist.c.s
 
+lib/srvutils.o: lib/srvutils.c.o
+
+.PHONY : lib/srvutils.o
+
+# target to build an object file
+lib/srvutils.c.o:
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/lib/srvutils.c.o
+	$(MAKE) -f CMakeFiles/client2.dir/build.make CMakeFiles/client2.dir/lib/srvutils.c.o
+	$(MAKE) -f CMakeFiles/client1.dir/build.make CMakeFiles/client1.dir/lib/srvutils.c.o
+.PHONY : lib/srvutils.c.o
+
+lib/srvutils.i: lib/srvutils.c.i
+
+.PHONY : lib/srvutils.i
+
+# target to preprocess a source file
+lib/srvutils.c.i:
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/lib/srvutils.c.i
+	$(MAKE) -f CMakeFiles/client2.dir/build.make CMakeFiles/client2.dir/lib/srvutils.c.i
+	$(MAKE) -f CMakeFiles/client1.dir/build.make CMakeFiles/client1.dir/lib/srvutils.c.i
+.PHONY : lib/srvutils.c.i
+
+lib/srvutils.s: lib/srvutils.c.s
+
+.PHONY : lib/srvutils.s
+
+# target to generate assembly for a file
+lib/srvutils.c.s:
+	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/lib/srvutils.c.s
+	$(MAKE) -f CMakeFiles/client2.dir/build.make CMakeFiles/client2.dir/lib/srvutils.c.s
+	$(MAKE) -f CMakeFiles/client1.dir/build.make CMakeFiles/client1.dir/lib/srvutils.c.s
+.PHONY : lib/srvutils.c.s
+
 lib/tp1opt.o: lib/tp1opt.c.o
 
 .PHONY : lib/tp1opt.o
@@ -283,6 +316,9 @@ help:
 	@echo "... lib/slist.o"
 	@echo "... lib/slist.i"
 	@echo "... lib/slist.s"
+	@echo "... lib/srvutils.o"
+	@echo "... lib/srvutils.i"
+	@echo "... lib/srvutils.s"
 	@echo "... lib/tp1opt.o"
 	@echo "... lib/tp1opt.i"
 	@echo "... lib/tp1opt.s"

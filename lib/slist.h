@@ -8,14 +8,7 @@
 #define NULL_SOCKET -1
 #define NULL_ADDRESS ""
 
-#define MSG_BUFFER_SIZE 256     // Msg size
-#define SLIST_ADDR_MAX_SIZE 25  // Format "IP:Port" size
-#define SECURITY_MARGIN_SIZE 10   // Security margin to avoid segmentation fault
 
-
-// Log format:  "[IP:Port]: Msg" total size (for server receiving msg)
-//              ":~$ IP:Port Msg" total size (for server sending msg)
-#define LOG_BUFFER_SIZE SLIST_ADDR_MAX_SIZE + MSG_BUFFER_SIZE + SECURITY_MARGIN_SIZE
 
 #define SLIST_OK 0
 #define SLIST_MAX_SIZE_REACHED 1

@@ -66,7 +66,7 @@ CMAKE_BINARY_DIR = "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Ativida
 CMakeFiles/server.dir/all:
 	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/depend
 	$(MAKE) -f CMakeFiles/server.dir/build.make CMakeFiles/server.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles" --progress-num=7,8,9,10 "Built target server"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles" --progress-num=9,10,11,12,13 "Built target server"
 .PHONY : CMakeFiles/server.dir/all
 
 # Include target in all.
@@ -76,7 +76,7 @@ all: CMakeFiles/server.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/server.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles" 4
+	$(CMAKE_COMMAND) -E cmake_progress_start "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles" 5
 	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/server.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles" 0
 .PHONY : CMakeFiles/server.dir/rule
@@ -103,7 +103,7 @@ clean: CMakeFiles/server.dir/clean
 CMakeFiles/client2.dir/all:
 	$(MAKE) -f CMakeFiles/client2.dir/build.make CMakeFiles/client2.dir/depend
 	$(MAKE) -f CMakeFiles/client2.dir/build.make CMakeFiles/client2.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles" --progress-num=4,5,6 "Built target client2"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles" --progress-num=5,6,7,8 "Built target client2"
 .PHONY : CMakeFiles/client2.dir/all
 
 # Include target in all.
@@ -113,7 +113,7 @@ all: CMakeFiles/client2.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/client2.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles" 3
+	$(CMAKE_COMMAND) -E cmake_progress_start "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles" 4
 	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/client2.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles" 0
 .PHONY : CMakeFiles/client2.dir/rule
@@ -140,7 +140,7 @@ clean: CMakeFiles/client2.dir/clean
 CMakeFiles/client1.dir/all:
 	$(MAKE) -f CMakeFiles/client1.dir/build.make CMakeFiles/client1.dir/depend
 	$(MAKE) -f CMakeFiles/client1.dir/build.make CMakeFiles/client1.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles" --progress-num=1,2,3 "Built target client1"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles" --progress-num=1,2,3,4 "Built target client1"
 .PHONY : CMakeFiles/client1.dir/all
 
 # Include target in all.
@@ -150,7 +150,7 @@ all: CMakeFiles/client1.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/client1.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles" 3
+	$(CMAKE_COMMAND) -E cmake_progress_start "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles" 4
 	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/client1.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start "/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/cmake-build-debug/CMakeFiles" 0
 .PHONY : CMakeFiles/client1.dir/rule

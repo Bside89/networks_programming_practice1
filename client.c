@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <pthread.h>
 #include "lib/tp1opt.h"
+#include "lib/srvutils.h"
 
 #define MSG_BUFFER_SIZE 256
 

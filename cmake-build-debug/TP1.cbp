@@ -180,6 +180,16 @@
 		<Unit filename="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/slist.h">
 			<Option target="server"/>
 		</Unit>
+		<Unit filename="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/srvutils.c">
+			<Option target="server"/>
+			<Option target="client2"/>
+			<Option target="client1"/>
+		</Unit>
+		<Unit filename="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/srvutils.h">
+			<Option target="server"/>
+			<Option target="client2"/>
+			<Option target="client1"/>
+		</Unit>
 		<Unit filename="/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/tp1opt.c">
 			<Option target="server"/>
 			<Option target="client2"/>

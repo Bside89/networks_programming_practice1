@@ -10,6 +10,7 @@
 #include <assert.h>
 #include "lib/tp1opt.h"
 #include "lib/slist.h"
+#include "lib/srvutils.h"
 
 
 // Flag that indicate if it is time to shutdown (switched by signal handler)
@@ -95,16 +96,14 @@ int main(int argc, char** argv) {
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons((uint16_t) netopt_get_port());
 
-    // Fill server data to the correct format message
-    memset(&server_address, 0, sizeof(server_address));
-    sprintf(server_address, "%s:%hu", inet_ntoa(serv_addr.sin_addr),
-            ntohs(serv_addr.sin_port));
-
     // Bind address to socket
     if (bind(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
         perror("bind");
         exit(EXIT_FAILURE);
     }
+
+    // Fill server string to the correct format message
+    addr_wrapper(&server_address, serv_addr);
 
     if (netopt_get_transport_protocol() == SOCK_STREAM) { // TCP
         // Listen the socket for incoming connections
@@ -129,7 +128,7 @@ int main(int argc, char** argv) {
         }
         if (pid == 0) { // Child process (for writing handler)
             close(reader_writer_pipe[1]); // Writer handler will not write nothing
-            writer_handler(NULL);
+            writer_handler((void*) server_address);
             return 0;
         } else {
             close(reader_writer_pipe[0]); // Reader handler will not read nothing
@@ -190,9 +189,7 @@ void accept_connections_handler(int listen_socket) {
     }
 
     // Fill data to insert in connection's list
-    memset(&address, 0, sizeof(address));
-    sprintf(address, "%s:%hu", inet_ntoa(cli_addr.sin_addr),
-            ntohs(cli_addr.sin_port));
+    addr_wrapper(&address, cli_addr);
 
     // Insert into list
     if (slist_push(newsockfd, address) == SLIST_MAX_SIZE_REACHED) {
@@ -230,7 +227,6 @@ void* writer_handler(void *arg) {
             do {
                 retvalue = fgets(log_buffer, sizeof(log_buffer), stdin);
             } while (retvalue == NULL);
-            printf("Server >> %s\n", log_buffer);
             if (locate_addressee(server_address, &log_buffer, &addr) < 0) {
                 puts("Message not send due to incorrect format.");
                 continue;
@@ -284,7 +280,7 @@ void* reader_handler(void *arg) {
         FD_CLR(sockfd, &active_sockets);
         return NULL;
     }
-    memset(log_buffer, 0, sizeof(msg_buffer));
+    memset(log_buffer, 0, sizeof(log_buffer));
     sprintf(log_buffer, "[%s]: %s", address, msg_buffer);
     printf(log_buffer);
 

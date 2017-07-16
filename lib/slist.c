@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "slist.h"
+#include "srvutils.h"
 
 
 typedef struct connection {
