@@ -28,6 +28,12 @@ int reader_writer_pipe[2];
 /* **************************************** */
 
 
+struct rwh_packet {
+    int sockfd;
+    char log[LOG_BUFFER_SIZE];
+};
+
+
 /* **************************************** */
 /* Functions used */
 
@@ -185,8 +191,8 @@ int main(int argc, char** argv) {
 
 void accept_connections_handler(int listen_socket) {
 
+    struct rwh_packet s;
     char address[SLIST_ADDR_MAX_SIZE];
-    char log_buffer[LOG_BUFFER_SIZE];
     struct sockaddr_in cli_addr;
     int clilen = sizeof(cli_addr);
 
@@ -210,40 +216,41 @@ void accept_connections_handler(int listen_socket) {
     FD_SET(newsockfd, &active_sockets);
 
     // Fill log_buffer to format message
-    printf(client_logon_message(&log_buffer, address));
+    memset((char*) &s, 0, sizeof(s));
+    s.sockfd = NULL_SOCKET;
+    printf(client_logon_message(&s.log, address));
 
     if (netopt_get_chatmode() == GROUP_MODE) // Send message to writer
-        write(reader_writer_pipe[1], log_buffer, sizeof(log_buffer));
+        write(reader_writer_pipe[1], (char*) &s, sizeof(s));
 
 }
 
 
 void* writer_handler(void *arg) {
 
-    char log_buffer[LOG_BUFFER_SIZE];
+    struct rwh_packet s;
     char addr[SLIST_ADDR_MAX_SIZE];
     char *retvalue;
     char *server_address = (char*) arg;
-    int sockfd;
 
     while (!is_exit) {
 
-        memset(log_buffer, 0, sizeof(log_buffer));
+        memset((char*) &s, 0, sizeof(s));
 
         if (netopt_get_chatmode() == UNIQUE_MODE) {
             do {
-                retvalue = fgets(log_buffer, sizeof(log_buffer), stdin);
+                retvalue = fgets(s.log, sizeof(s.log), stdin);
             } while (retvalue == NULL);
-            if (locate_addressee(server_address, &log_buffer, &addr) < 0) {
+            if (locate_addressee(server_address, &s.log, &addr) < 0) {
                 puts("Message not send due to incorrect format.");
                 continue;
             }
-            sockfd = slist_get_socket_by_address(addr);
-            if (sockfd == NULL_SOCKET) {
+            s.sockfd = slist_get_socket_by_address(addr);
+            if (s.sockfd == NULL_SOCKET) {
                 puts("Client not found or not connected (error on get socket).");
                 continue;
             }
-            ssize_t wt = write(sockfd, log_buffer, sizeof(log_buffer));
+            ssize_t wt = write(s.sockfd, s.log, sizeof(s.log));
             if (wt < 0) {
                 perror("read");
                 exit(EXIT_FAILURE);
@@ -251,12 +258,12 @@ void* writer_handler(void *arg) {
                 puts("Client not found or not connected (error on write).");
                 continue;
             }
-            printf(log_buffer);
+            printf(s.log);
 
         } else { // Receive message from reader
 
-            if (read(reader_writer_pipe[0], log_buffer, sizeof(log_buffer)) > 0)
-                slist_sendall(log_buffer);
+            if (read(reader_writer_pipe[0], (char*) &s, sizeof(s)) > 0)
+                slist_sendall(s.log, s.sockfd);
         }
     }
     return NULL;
@@ -265,25 +272,28 @@ void* writer_handler(void *arg) {
 
 void* reader_handler(void *arg) {
 
-    int sockfd = *((int*) arg);
-    char log_buffer[LOG_BUFFER_SIZE];
-    char *address = slist_get_address_by_socket(sockfd);
+    struct rwh_packet s;
+    char *address;
 
-    memset(log_buffer, 0, sizeof(log_buffer));
+    memset((char*) &s, 0, sizeof(s));
 
-    ssize_t rd = read(sockfd, log_buffer, sizeof(log_buffer));
+    s.sockfd = *((int*) arg);
+    address = slist_get_address_by_socket(s.sockfd);
+
+    ssize_t rd = read(s.sockfd, s.log, sizeof(s.log));
     if (rd < 0) {
         perror("read");
         exit(EXIT_FAILURE);
     } else if (rd == 0) { // Client has logged out
-        int n = slist_pop(sockfd); // Close occurs here
+        int n = slist_pop(s.sockfd); // Close occurs here
         assert(n == SLIST_OK);
-        FD_CLR(sockfd, &active_sockets);
-        client_logout_message(&log_buffer, address);
+        FD_CLR(s.sockfd, &active_sockets);
+        client_logout_message(&s.log, address);
     }
-    printf(log_buffer);
-    if (netopt_get_chatmode() == GROUP_MODE)
-        write(reader_writer_pipe[1], log_buffer, sizeof(log_buffer));
+    printf(s.log);
+    if (netopt_get_chatmode() == GROUP_MODE) {
+        write(reader_writer_pipe[1], (char*) &s, sizeof(s));
+    }
 
     return NULL;
 }

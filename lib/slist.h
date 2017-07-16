@@ -31,7 +31,7 @@ unsigned long int slist_size();
 
 int slist_is_full();
 
-int slist_sendall(char *msg);
+int slist_sendall(char *msg, int sender);
 
 void slist_debug();
 

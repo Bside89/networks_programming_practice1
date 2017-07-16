@@ -117,16 +117,17 @@ int slist_is_full() {
 }
 
 
-int slist_sendall(char *msg) {
+int slist_sendall(char *msg, int sender) {
 
-    int i;
+    int i, sckt;
     char log_buffer[LOG_BUFFER_SIZE];
 
     memset(&log_buffer, 0, sizeof(log_buffer));
     strcpy(log_buffer, msg);
 
     for (i = 0; i < list.max_size; i++) {
-        if (list.conn_array[i].sockfd != NULL_SOCKET) {
+        sckt = list.conn_array[i].sockfd;
+        if (sckt != NULL_SOCKET && sckt != sender) {
             write(list.conn_array[i].sockfd, log_buffer, sizeof(log_buffer));
         }
     }
