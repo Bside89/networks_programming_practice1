@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
     }
 
     // Bifurcation (fork or thread)
-    if (netopt_get_parallelism_mode() == MULTIPROCESSING_MODE_SET) {
+    if (netopt_get_parallelism_mode() == MULTIPROCESSING_MODE) {
         pid = fork();
         if (pid < 0) {
             perror("fork");
@@ -177,7 +177,7 @@ int main(int argc, char** argv) {
 void accept_connections_handler(int listen_socket) {
 
     char address[SLIST_ADDR_MAX_SIZE];
-    char log_buffer[MSG_BUFFER_SIZE + SLIST_ADDR_MAX_SIZE];
+    char log_buffer[LOG_BUFFER_SIZE];
     struct sockaddr_in cli_addr;
     int clilen = sizeof(cli_addr);
 
@@ -201,13 +201,11 @@ void accept_connections_handler(int listen_socket) {
     FD_SET(newsockfd, &active_sockets);
 
     // Fill log_buffer to format message
-    memset(&log_buffer, 0, sizeof(log_buffer));
-    sprintf(log_buffer, "Client %s has logged in.\n", address);
+    printf(client_logon_message(&log_buffer, address));
 
-    if (netopt_get_chatmode() == GROUP_MODE_SET) // Send message to writer
+    if (netopt_get_chatmode() == GROUP_MODE) // Send message to writer
         write(reader_writer_pipe[1], log_buffer, sizeof(log_buffer));
 
-    printf(log_buffer);
 }
 
 
@@ -223,7 +221,7 @@ void* writer_handler(void *arg) {
 
         memset(log_buffer, 0, sizeof(log_buffer));
 
-        if (netopt_get_chatmode() == UNIQUE_MODE_SET) {
+        if (netopt_get_chatmode() == UNIQUE_MODE) {
             do {
                 retvalue = fgets(log_buffer, sizeof(log_buffer), stdin);
             } while (retvalue == NULL);
@@ -233,7 +231,7 @@ void* writer_handler(void *arg) {
             }
             sockfd = slist_get_socket_by_address(addr);
             if (sockfd == NULL_SOCKET) {
-                puts("Client not found or not connected. (error on get socket");
+                puts("Client not found or not connected (error on get socket).");
                 continue;
             }
             ssize_t wt = write(sockfd, log_buffer, sizeof(log_buffer));
@@ -241,16 +239,15 @@ void* writer_handler(void *arg) {
                 perror("read");
                 exit(EXIT_FAILURE);
             } else if (wt == 0) {
-                puts("Client not found or not connected. (error on write)");
+                puts("Client not found or not connected (error on write).");
                 continue;
             }
             printf(log_buffer);
 
         } else { // Receive message from reader
-            ssize_t rd = read(reader_writer_pipe[0], log_buffer, sizeof(log_buffer));
-            if (rd > 0) {
+            
+            if (read(reader_writer_pipe[0], log_buffer, sizeof(log_buffer)) > 0)
                 slist_sendall(log_buffer);
-            }
         }
     }
     return NULL;
@@ -260,32 +257,24 @@ void* writer_handler(void *arg) {
 void* reader_handler(void *arg) {
 
     int sockfd = *((int*) arg);
-    char msg_buffer[MSG_BUFFER_SIZE], log_buffer[LOG_BUFFER_SIZE];
+    char log_buffer[LOG_BUFFER_SIZE];
     char *address = slist_get_address_by_socket(sockfd);
 
-    memset(msg_buffer, 0, sizeof(msg_buffer));
+    memset(log_buffer, 0, sizeof(log_buffer));
 
-    ssize_t rd = read(sockfd, msg_buffer, sizeof(msg_buffer));
+    ssize_t rd = read(sockfd, log_buffer, sizeof(log_buffer));
     if (rd < 0) {
         perror("read");
         exit(EXIT_FAILURE);
-    } else if (rd == 0) {
-        memset(log_buffer, 0, sizeof(msg_buffer));
-        sprintf(log_buffer, "Client %s has logged out.\n", address);
-        printf(log_buffer);
-        if (netopt_get_chatmode() == GROUP_MODE_SET)
-            write(reader_writer_pipe[1], log_buffer, sizeof(log_buffer));
+    } else if (rd == 0) { // Client has logged out
         int n = slist_pop(sockfd); // Close occurs here
         assert(n == SLIST_OK);
         FD_CLR(sockfd, &active_sockets);
-        return NULL;
+        client_logout_message(&log_buffer, address);
     }
-    memset(log_buffer, 0, sizeof(log_buffer));
-    sprintf(log_buffer, "[%s]: %s", address, msg_buffer);
     printf(log_buffer);
-
-    // Send message to writer
-    write(reader_writer_pipe[1], log_buffer, sizeof(log_buffer));
+    if (netopt_get_chatmode() == GROUP_MODE)
+        write(reader_writer_pipe[1], log_buffer, sizeof(log_buffer));
 
     return NULL;
 }
@@ -322,16 +311,13 @@ int locate_addressee(char *srvaddr, char (*msgbuffer)[LOG_BUFFER_SIZE],
     init = strchr(localbuffer, space);
     if (init == NULL)
         return -1;
-    init++;
-    end = strchr(init+1, space);
+    end = strchr(++init, space);
     if (end == NULL)
         return -1;
-    end++;
-    size_t tam = strlen(init) - strlen(end) - 1;
+    size_t addrsize = strlen(init) - strlen(++end) - 1;
 
-    strncpy(*address, init, tam);
-    memset(*msgbuffer, 0, LOG_BUFFER_SIZE);
-    sprintf(*msgbuffer, "[%s]: %s", srvaddr, end);
+    strncpy(*address, init, addrsize);
+    log_wrapper(msgbuffer, srvaddr, end);
 
     return 0;
 }

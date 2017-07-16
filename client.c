@@ -7,6 +7,7 @@
 #include <netdb.h>
 #include <signal.h>
 #include <pthread.h>
+#include <arpa/inet.h>
 #include "lib/tp1opt.h"
 #include "lib/srvutils.h"
 
@@ -58,7 +59,8 @@ int main(int argc, char** argv) {
     pid_t pid;
     pthread_t threads;
     struct hostent *server;
-    struct sockaddr_in serv_addr;
+    struct sockaddr_in serv_addr, cli_addr;
+    int len = sizeof(struct sockaddr);
 
     signal(SIGINT, sigint_handler);     // Signal handler for SIGINT
     signal(SIGTERM, sigterm_handler);   // Signal handler for SIGTERM
@@ -90,30 +92,37 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
 
+    // Get client own info (IP and port)
+    if (getsockname(sockfd, (struct sockaddr*) &cli_addr, (socklen_t*) &len) < 0) {
+        perror("getsockname");
+        exit(EXIT_FAILURE);
+    }
+
     // Bifurcation (fork or thread)
-    if (netopt_get_parallelism_mode() == MULTIPROCESSING_MODE_SET) {
+    if (netopt_get_parallelism_mode() == MULTIPROCESSING_MODE) {
         pid = fork();
         if (pid < 0) {
             perror("fork");
             exit(EXIT_FAILURE);
         }
         if (pid == 0) { // Child process handles writing
-            cli_writer((void*) &sockfd);
+            cli_writer((void*) &cli_addr);
         } else {        // Father process handles reading
-            cli_reader((void*) &sockfd);
+            cli_reader(NULL);
             kill(pid, SIGTERM);
         }
     } else {
         // New thread handles writing
-        if (pthread_create(&threads, NULL, cli_writer, (void*) &sockfd) < 0) {
+        if (pthread_create(&threads, NULL, cli_writer, (void*) &cli_addr) < 0) {
             perror("pthread_create");
             exit(EXIT_FAILURE);
         }
-        cli_reader((void*) &sockfd); // Main thread handles reading
+        cli_reader(NULL); // Main thread handles reading
     }
 
     netopt_unset();
     close(sockfd);
+    sleep(1);
 
     return 0;
 }
@@ -122,13 +131,12 @@ int main(int argc, char** argv) {
 void* cli_reader(void *arg) {
 
     ssize_t rd;
-    int sckt = *((int*) arg);
     char buffer[MSG_BUFFER_SIZE];
 
     while (1) {
         memset(buffer, 0, sizeof(buffer));
-        rd = read(sckt, buffer, sizeof(buffer) - 1);
-        if (rd  < 0) {
+        rd = read(sockfd, buffer, sizeof(buffer) - 1);
+        if (rd < 0) {
             perror("read");
             break;
         } else if (rd == 0) {
@@ -144,18 +152,24 @@ void* cli_reader(void *arg) {
 void* cli_writer(void *arg) {
 
     ssize_t wt;
-    int sckt = *((int*) arg);
+    struct sockaddr_in my_addr = *((struct sockaddr_in *) arg);
     char* retvalue;
-    char buffer[MSG_BUFFER_SIZE];
+    char msg_buffer[MSG_BUFFER_SIZE], log_buffer[LOG_BUFFER_SIZE];
+    char address[SLIST_ADDR_MAX_SIZE];
+
+    addr_wrapper(&address, my_addr);
 
     while (1) {
 
-        memset(buffer, 0, sizeof(buffer));
+        memset(msg_buffer, 0, sizeof(msg_buffer));
         do {
-            retvalue = fgets(buffer, sizeof(buffer), stdin);
+            retvalue = fgets(msg_buffer, sizeof(msg_buffer), stdin);
         } while (retvalue == NULL);
 
-        wt = write(sckt, buffer, sizeof(buffer));
+        log_wrapper(&log_buffer, address, msg_buffer);
+        printf(log_buffer);
+
+        wt = write(sockfd, log_buffer, sizeof(log_buffer));
         if (wt < 0) {
             perror("write");
             break;

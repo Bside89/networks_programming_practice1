@@ -17,8 +17,24 @@ unistd.h
 -
 slist.h
 /home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/slist.h
+srvutils.h
+/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/srvutils.h
 
 /home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/slist.h
+
+/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/srvutils.c
+string.h
+-
+stdio.h
+-
+arpa/inet.h
+-
+srvutils.h
+/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/srvutils.h
+
+/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/srvutils.h
+netinet/in.h
+-
 
 /home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/tp1opt.c
 stdio.h
@@ -63,4 +79,6 @@ lib/tp1opt.h
 /home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/tp1opt.h
 lib/slist.h
 /home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/slist.h
+lib/srvutils.h
+/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/srvutils.h
 

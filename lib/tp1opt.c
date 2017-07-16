@@ -48,8 +48,8 @@ int netopt_set(int argc, char **argv, int is_server) {
     // Defaults
     options = (netconf.is_server) ? GETOPT_OPTIONS_SERVER : GETOPT_OPTIONS_CLIENT;
 
-    netconf.chat_mode_opt = GROUP_MODE_SET;
-    netconf.parallelism_mode_opt = MULTIPROCESSING_MODE_SET;
+    netconf.chat_mode_opt = GROUP_MODE;
+    netconf.parallelism_mode_opt = MULTIPROCESSING_MODE;
     netconf.transport_protocol_opt = SOCK_STREAM; // TCP
     netconf.interr_opt = INT_MODE_ENTER;
 
@@ -60,25 +60,25 @@ int netopt_set(int argc, char **argv, int is_server) {
             case OPT_UNIQUE:
                 if (!netopt_is_option_valid(cm_set))
                     return -1;
-                netconf.chat_mode_opt = UNIQUE_MODE_SET;
+                netconf.chat_mode_opt = UNIQUE_MODE;
                 cm_set = 1;
                 break;
             case OPT_GROUP:
                 if (!netopt_is_option_valid(cm_set))
                     return -1;
-                netconf.chat_mode_opt = GROUP_MODE_SET;
+                netconf.chat_mode_opt = GROUP_MODE;
                 cm_set = 1;
                 break;
             case OPT_FORK:
                 if (!netopt_is_option_valid(pm_set))
                     return -1;
-                netconf.parallelism_mode_opt = MULTIPROCESSING_MODE_SET;
+                netconf.parallelism_mode_opt = MULTIPROCESSING_MODE;
                 pm_set = 1;
                 break;
             case OPT_THREAD:
                 if (!netopt_is_option_valid(pm_set))
                     return -1;
-                netconf.parallelism_mode_opt = MULTITHREADING_MODE_SET;
+                netconf.parallelism_mode_opt = MULTITHREADING_MODE;
                 pm_set = 1;
                 break;
             case OPT_PROTOCOL_MODE:
@@ -250,9 +250,9 @@ void netopt_debug() {
     printf("Application started in %s mode.\n",
            (netconf.is_server) ? "Server" : "Client");
     printf("%s mode is used.\n",
-           (netconf.chat_mode_opt == UNIQUE_MODE_SET) ? "Unique" : "Group");
+           (netconf.chat_mode_opt == UNIQUE_MODE) ? "Unique" : "Group");
     printf("%s mode is used.\n",
-            (netconf.parallelism_mode_opt == MULTITHREADING_MODE_SET) ?
+            (netconf.parallelism_mode_opt == MULTITHREADING_MODE) ?
             "Multithreading" : "Multiprocessing");
     printf("%s protocol is used.\n",
            (netconf.transport_protocol_opt == SOCK_DGRAM) ? "UDP" : "TCP");

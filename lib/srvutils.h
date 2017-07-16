@@ -18,7 +18,13 @@
 #define LOG_BUFFER_SIZE SLIST_ADDR_MAX_SIZE + MSG_BUFFER_SIZE + SECURITY_MARGIN_SIZE
 
 
-void addr_wrapper(char (*addr)[SLIST_ADDR_MAX_SIZE], struct sockaddr_in addr_in);
+char* addr_wrapper(char (*addr)[SLIST_ADDR_MAX_SIZE], struct sockaddr_in addr_in);
+
+char* log_wrapper(char (*log)[LOG_BUFFER_SIZE], char *addr, char *message);
+
+char* client_logon_message(char (*log)[LOG_BUFFER_SIZE], char *addr);
+
+char* client_logout_message(char (*log)[LOG_BUFFER_SIZE], char *addr);
 
 
 #endif //TP1_SRVUTILS_H

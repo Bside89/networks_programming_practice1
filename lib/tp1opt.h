@@ -31,10 +31,10 @@
 #define INT_MODE_ENTER "enter"          // Enter key;
 #define INT_MODE_INTER "inter"          // Interuption key defined;
 
-#define UNIQUE_MODE_SET 0
-#define GROUP_MODE_SET 1            // Default
-#define MULTIPROCESSING_MODE_SET 0  // Default
-#define MULTITHREADING_MODE_SET 1
+#define UNIQUE_MODE 0
+#define GROUP_MODE 1                // Default
+#define MULTIPROCESSING_MODE 0      // Default
+#define MULTITHREADING_MODE 1
 
 #define NETOPT_OPTION_NOT_VALID -1
 #define NETOPT_OPTIONS_NOT_SET -2
