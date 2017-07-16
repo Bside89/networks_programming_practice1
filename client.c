@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
     pid_t pid;
     pthread_t threads;
     struct hostent *server;
-    struct sockaddr_in serv_addr, cli_addr;
+    struct sockaddr_in serv_addr, my_addr;
     int len = sizeof(struct sockaddr);
 
     signal(SIGINT, sigint_handler);     // Signal handler for SIGINT
@@ -92,8 +92,8 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
 
-    // Get client own info (IP and port)
-    if (getsockname(sockfd, (struct sockaddr*) &cli_addr, (socklen_t*) &len) < 0) {
+    // Get my own info (IP and port)
+    if (getsockname(sockfd, (struct sockaddr*) &my_addr, (socklen_t*) &len) < 0) {
         perror("getsockname");
         exit(EXIT_FAILURE);
     }
@@ -106,14 +106,14 @@ int main(int argc, char** argv) {
             exit(EXIT_FAILURE);
         }
         if (pid == 0) { // Child process handles writing
-            cli_writer((void*) &cli_addr);
+            cli_writer((void*) &my_addr);
         } else {        // Father process handles reading
             cli_reader(NULL);
             kill(pid, SIGTERM);
         }
     } else {
         // New thread handles writing
-        if (pthread_create(&threads, NULL, cli_writer, (void*) &cli_addr) < 0) {
+        if (pthread_create(&threads, NULL, cli_writer, (void*) &my_addr) < 0) {
             perror("pthread_create");
             exit(EXIT_FAILURE);
         }

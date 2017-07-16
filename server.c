@@ -70,9 +70,9 @@ int main(int argc, char** argv) {
     fd_set read_sockets;
     pid_t pid;
     pthread_t threads[2];
-    struct sockaddr_in serv_addr;
+    struct sockaddr_in serv_addr, my_addr;
     int sockfd;
-    int i;
+    int i, len = sizeof(struct sockaddr);
     char server_address[SLIST_ADDR_MAX_SIZE];
 
     signal(SIGINT, sigint_handler);     // Signal handler for SIGINT
@@ -109,6 +109,15 @@ int main(int argc, char** argv) {
         // Listen the socket for incoming connections
         listen(sockfd, 5);
     }
+
+    // Get my own info (IP and port)
+    memset((char*) &my_addr, 0, sizeof(my_addr)); // Zero the struct
+    if (getsockname(sockfd, (struct sockaddr*) &my_addr, (socklen_t*) &len) < 0) {
+        perror("getsockname");
+        exit(EXIT_FAILURE);
+    }
+    printf("My IP:Port is %s:%hu\n",
+           inet_ntoa(my_addr.sin_addr), ntohs(my_addr.sin_port));
 
     // Initialize active connection's list
     slist_start((size_t) netopt_get_max_connections_number());
@@ -245,7 +254,7 @@ void* writer_handler(void *arg) {
             printf(log_buffer);
 
         } else { // Receive message from reader
-            
+
             if (read(reader_writer_pipe[0], log_buffer, sizeof(log_buffer)) > 0)
                 slist_sendall(log_buffer);
         }
