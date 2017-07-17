@@ -18,6 +18,10 @@
 #define LOG_BUFFER_SIZE SLIST_ADDR_MAX_SIZE + MSG_BUFFER_SIZE + SECURITY_MARGIN_SIZE
 
 
+// Commands (server
+#define SEND_MSG_CMD ":~$ " // Usage: :~$ [IP:Port] [Msg]
+
+
 char* addr_wrapper(char (*addr)[SLIST_ADDR_MAX_SIZE], struct sockaddr_in addr_in);
 
 char* log_wrapper(char (*log)[LOG_BUFFER_SIZE], char *addr, char *message);

@@ -23,15 +23,20 @@ volatile int is_exit = 0;
 
 fd_set active_sockets;
 
-int reader_writer_pipe[2];
+int rwh_pipe[2];
 
 /* **************************************** */
 
+
+/* **************************************** */
+/* Functions used */
 
 struct rwh_packet {
     int sockfd;
     char log[LOG_BUFFER_SIZE];
 };
+
+/* **************************************** */
 
 
 /* **************************************** */
@@ -129,7 +134,7 @@ int main(int argc, char** argv) {
     slist_start((size_t) netopt_get_max_connections_number());
 
     // Initialize pipe communication between reader and writer
-    if (pipe(reader_writer_pipe) < 0) {
+    if (pipe(rwh_pipe) < 0) {
         perror("pipe");
         exit(EXIT_FAILURE);
     }
@@ -142,11 +147,11 @@ int main(int argc, char** argv) {
             exit(EXIT_FAILURE);
         }
         if (pid == 0) { // Child process (for writing handler)
-            close(reader_writer_pipe[1]); // Writer handler will not write nothing
+            close(rwh_pipe[1]); // Writer handler will not write nothing
             writer_handler((void*) server_address);
             return 0;
         } else {
-            close(reader_writer_pipe[0]); // Reader handler will not read nothing
+            close(rwh_pipe[0]); // Reader handler will not read nothing
         }
     } else {
         // New thread (for writing handler)
@@ -221,7 +226,7 @@ void accept_connections_handler(int listen_socket) {
     printf(client_logon_message(&s.log, address));
 
     if (netopt_get_chatmode() == GROUP_MODE) // Send message to writer
-        write(reader_writer_pipe[1], (char*) &s, sizeof(s));
+        write(rwh_pipe[1], (char*) &s, sizeof(s));
 
 }
 
@@ -262,7 +267,7 @@ void* writer_handler(void *arg) {
 
         } else { // Receive message from reader
 
-            if (read(reader_writer_pipe[0], (char*) &s, sizeof(s)) > 0)
+            if (read(rwh_pipe[0], (char*) &s, sizeof(s)) > 0)
                 slist_sendall(s.log, s.sockfd);
         }
     }
@@ -292,7 +297,7 @@ void* reader_handler(void *arg) {
     }
     printf(s.log);
     if (netopt_get_chatmode() == GROUP_MODE) {
-        write(reader_writer_pipe[1], (char*) &s, sizeof(s));
+        write(rwh_pipe[1], (char*) &s, sizeof(s));
     }
 
     return NULL;
@@ -320,7 +325,7 @@ int locate_addressee(char *srvaddr, char (*msgbuffer)[LOG_BUFFER_SIZE],
     char space = ' ';
     char localbuffer[LOG_BUFFER_SIZE];
 
-    if (strstr(*msgbuffer, ":~$ ") != *msgbuffer)
+    if (strstr(*msgbuffer, SEND_MSG_CMD) != *msgbuffer)
         return -1;
 
     memset(localbuffer, 0, sizeof(localbuffer));
