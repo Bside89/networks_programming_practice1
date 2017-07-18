@@ -35,6 +35,8 @@ int rwh_pipe[2];
 // Reader-writer handlers packet: Contain info communicated between handlers
 struct rwh_packet {
     int sockfd;
+    struct sockaddr_in client;
+    int clilen;
     char log[LOG_BUFFER_SIZE];
 };
 
@@ -83,9 +85,9 @@ int main(int argc, char** argv) {
     fd_set read_sockets;
     pid_t pid;
     pthread_t threads[2];
-    struct sockaddr_in serv_addr, my_addr;
+    struct sockaddr_in serv_addr;
     int sockfd;
-    int i, optval = 1, len = sizeof(struct sockaddr);
+    int i, optval = 1, n;
     char server_address[SLIST_ADDR_MAX_SIZE];
 
     signal(SIGINT, sigint_handler);     // Signal handler for SIGINT
@@ -127,17 +129,9 @@ int main(int argc, char** argv) {
         listen(sockfd, 5);
     }
 
-    // Get my own info (IP and port)
-    memset((char*) &my_addr, 0, sizeof(my_addr)); // Zero the struct
-    if (getsockname(sockfd, (struct sockaddr*) &my_addr, (socklen_t*) &len) < 0) {
-        perror("getsockname");
-        exit(EXIT_FAILURE);
-    }
-    printf("My IP:Port is %s:%hu\n",
-           inet_ntoa(my_addr.sin_addr), ntohs(my_addr.sin_port));
-
     // Initialize active connection's list
-    slist_start((size_t) netopt_get_max_connections_number());
+    n = netopt_get_transport_protocol() == SOCK_STREAM;
+    slist_start((size_t) netopt_get_max_connections_number(), n);
 
     // Initialize pipe communication between reader and writer
     if (pipe(rwh_pipe) < 0) {
@@ -186,7 +180,7 @@ int main(int argc, char** argv) {
             if (i == sockfd && netopt_get_transport_protocol() == SOCK_STREAM) {
                 accept_connections_handler(sockfd);
             } else { // Get message from socket (TCP or UDP)
-                reader_handler((void*) &i);
+                reader_handler((void *) &i);
             }
         }
     }
@@ -207,6 +201,9 @@ void accept_connections_handler(int listen_socket) {
     struct sockaddr_in cli_addr;
     int clilen = sizeof(cli_addr);
 
+    if (netopt_get_transport_protocol() == SOCK_DGRAM)
+        return;
+
     int newsockfd = accept(listen_socket, (struct sockaddr*) &cli_addr,
                        (unsigned int*) &clilen);
     if (newsockfd < 0) {
@@ -218,9 +215,9 @@ void accept_connections_handler(int listen_socket) {
     addr_wrapper(&address, cli_addr);
 
     // Insert into list
-    if (slist_push(newsockfd, address) == SLIST_MAX_SIZE_REACHED) {
-        send_unit_message(newsockfd, "Max connections reached. "
-                "Connection refused.\n");
+    if (slist_push(newsockfd, cli_addr) == SLIST_MAX_SIZE_REACHED) {
+        send_unit_message(newsockfd,
+                          "Max connections reached. Connection refused.\n");
         return;
     }
 
@@ -229,7 +226,7 @@ void accept_connections_handler(int listen_socket) {
     // Fill log_buffer to format message
     memset((char*) &s, 0, sizeof(s));
     s.sockfd = NULL_SOCKET;
-    printf(client_logon_message(&s.log, address));
+    printf(client_logon_message(&s.log, slist_get_address_by_socket(newsockfd)));
 
     if (netopt_get_chatmode() == GROUP_MODE) // Send message to writer
         write(rwh_pipe[1], (char*) &s, sizeof(s));
@@ -246,7 +243,7 @@ void* writer_handler(void *arg) {
 
     while (!is_exit) {
 
-        memset((char*) &s, 0, sizeof(s));
+        memset(&s.log, 0, sizeof(s.log));
 
         if (netopt_get_chatmode() == UNIQUE_MODE) {
             do {
@@ -256,12 +253,16 @@ void* writer_handler(void *arg) {
                 puts("Message not send due to incorrect format.");
                 continue;
             }
+            puts(addr);
+            slist_debug();
             s.sockfd = slist_get_socket_by_address(addr);
             if (s.sockfd == NULL_SOCKET) {
                 puts("Client not found or not connected (error on get socket).");
                 continue;
             }
-            ssize_t wt = write(s.sockfd, s.log, sizeof(s.log));
+            ssize_t wt = sendto(s.sockfd, s.log, sizeof(s.log), 0,
+                                (struct sockaddr *) &s.client,
+                                (socklen_t) s.clilen);
             if (wt < 0) {
                 perror("read");
                 exit(EXIT_FAILURE);
@@ -273,8 +274,9 @@ void* writer_handler(void *arg) {
 
         } else { // Receive message from reader
 
+            // Pass along the message to clients
             if (read(rwh_pipe[0], (char*) &s, sizeof(s)) > 0)
-                slist_sendall(s.log, s.sockfd); // Pass along the message to clients
+                slist_sendall(s.log, s.sockfd, s.client);
         }
     }
     return NULL;
@@ -284,30 +286,28 @@ void* writer_handler(void *arg) {
 void* reader_handler(void *arg) {
 
     struct rwh_packet s;
-    struct sockaddr_in client;
-    int clilen = sizeof(client);
-    char *address;
+    int n;
 
-    memset((char*) &s, 0, sizeof(s));
-
+    memset(&s.log, 0, sizeof(s.log));
     s.sockfd = *((int*) arg);
-    address = slist_get_address_by_socket(s.sockfd);
 
-    ssize_t rd = recvfrom(s.sockfd, s.log, sizeof(s.log), 0, (struct sockaddr*)
-            &client, (socklen_t *) &clilen);
-    //ssize_t rd = read(s.sockfd, s.log, sizeof(s.log));
+    ssize_t rd = recvfrom(s.sockfd, s.log, sizeof(s.log), 0,
+                          (struct sockaddr *) &s.client, (socklen_t *) &s.clilen);
     if (rd < 0) {
         perror("read");
         exit(EXIT_FAILURE);
     } else if (rd == 0) { // Client has logged out
-        int n = slist_pop(s.sockfd); // Close occurs here
-        assert(n == SLIST_OK);
-        FD_CLR(s.sockfd, &active_sockets);
-        client_logout_message(&s.log, address);
+        if (netopt_get_transport_protocol() == SOCK_STREAM) { // TCP
+            n = slist_pop(s.sockfd); // Close occurs here
+            assert(n == SLIST_OK);
+            FD_CLR(s.sockfd, &active_sockets);
+            client_logout_message(&s.log, slist_get_address_by_socket(s.sockfd));
+        }
     }
-
-    printf("Mensagem recebida de: [%s:%hu]\n",
-           inet_ntoa(client.sin_addr), ntohs(client.sin_port));
+    if (netopt_get_transport_protocol() == SOCK_DGRAM) {
+        slist_push(s.sockfd, s.client);
+    }
+    slist_debug();
     printf(s.log);
     if (netopt_get_chatmode() == GROUP_MODE) {
         write(rwh_pipe[1], (char*) &s, sizeof(s));

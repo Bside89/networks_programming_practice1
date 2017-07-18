@@ -19,7 +19,7 @@
 
 
 // Commands (server)
-#define SEND_MSG_CMD ":~$ " // Usage: :~$ [IP:Port] [Msg]
+#define SEND_MSG_CMD ":~$" // Usage: :~$ [IP:Port] [Msg]
 #define CMD_DELIMITER ' '
 
 

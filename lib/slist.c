@@ -6,12 +6,15 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 #include "slist.h"
 #include "srvutils.h"
 
 
 typedef struct connection {
     int sockfd;
+    struct sockaddr_in info;
+    int infolen;
     char address[SLIST_ADDR_MAX_SIZE];
 } conn_t;
 
@@ -25,13 +28,15 @@ typedef struct _slist {
 
 slist list; // All connections will be stored here
 
+int slist_mode = -1; // Protocol (TCP or UDP), -1 for not set
+
 int slist_is_set = 0; // Flag indicating if settings are (or not) set
 
 
 int slist_close(int sockfd);
 
 
-int slist_start(size_t size) {
+int slist_start(size_t size, int mode) {
 
     if (slist_is_set != 0)
         return SLIST_ALREADY_SET;
@@ -42,30 +47,52 @@ int slist_start(size_t size) {
         return SLIST_ALLOCATION_ERROR;
     }
     int i;
-
     for (i = 0; i < size; i++) {
         list.conn_array[i].sockfd = NULL_SOCKET;
     }
+    slist_mode = (mode) ? SLIST_TCP_MODE : SLIST_UDP_MODE;
     slist_is_set = 1;
     return SLIST_OK;
 }
 
 
-int slist_push(int sockfd, char* address) {
+int slist_push(int sockfd, struct sockaddr_in info) {
     int i;
     if (slist_is_full())
         return SLIST_MAX_SIZE_REACHED;
+    if (slist_isset_by_sockaddr(info))
+        return SLITS_ELEMENT_ALREADY_EXISTS;
+    if (info.sin_port == 0)
+        return SLIST_INVALID_ELEMENT;
     for (i = 0; i < list.max_size; i++) {
         if (list.conn_array[i].sockfd == NULL_SOCKET) {
+
             list.conn_array[i].sockfd = sockfd;
+            memcpy(&list.conn_array[i].info, &info, sizeof(info));
             memset(list.conn_array[i].address, 0,
                    sizeof(list.conn_array[i].address));
-            strcpy(list.conn_array[i].address, address);
+            addr_wrapper(&list.conn_array[i].address, info);
+            list.conn_array[i].infolen = sizeof(list.conn_array[i].info);
+
             list.size++;
             break;
         }
     }
     return SLIST_OK;
+}
+
+
+int slist_isset_by_sockaddr(struct sockaddr_in client) {
+    int i;
+    struct sockaddr_in other;
+    for (i = 0; i < list.max_size; i++) {
+        other = list.conn_array[i].info;
+        if (other.sin_addr.s_addr == client.sin_addr.s_addr &&
+                other.sin_port == client.sin_port) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 
@@ -77,7 +104,8 @@ int slist_pop(int sockfd) {
         if (list.conn_array[i].sockfd == sockfd) {
             list.conn_array[i].sockfd = NULL_SOCKET;
             list.size--;
-            slist_close(sockfd); // Close socket
+            if (slist_mode == SLIST_TCP_MODE)
+                slist_close(sockfd); // Close socket (only TCP)
             break;
         }
     }
@@ -117,18 +145,33 @@ int slist_is_full() {
 }
 
 
-int slist_sendall(char *msg, int sender) {
+int slist_sendall(char *msg, int sender, struct sockaddr_in sender_info) {
 
-    int i, sckt;
+    int i;
     char log_buffer[LOG_BUFFER_SIZE];
+    conn_t *c;
 
     memset(&log_buffer, 0, sizeof(log_buffer));
     strcpy(log_buffer, msg);
 
     for (i = 0; i < list.max_size; i++) {
-        sckt = list.conn_array[i].sockfd;
-        if (sckt != NULL_SOCKET && sckt != sender) {
-            write(list.conn_array[i].sockfd, log_buffer, sizeof(log_buffer));
+
+        c = &list.conn_array[i];
+
+        if (c->sockfd == NULL_SOCKET)
+            continue;
+
+        if (slist_mode == SLIST_TCP_MODE) { // TCP Protocol
+            if (c->sockfd != sender) {
+                write(c->sockfd, log_buffer, sizeof(log_buffer));
+            }
+        } else {                            // UDP Protocol
+            if (c->info.sin_addr.s_addr != sender_info.sin_addr.s_addr ||
+                    c->info.sin_port != sender_info.sin_port) {
+                sendto(c->sockfd, log_buffer, sizeof(log_buffer), 0,
+                       (struct sockaddr *) &c->info,
+                       (socklen_t) c->infolen);
+            }
         }
     }
     return 0;
@@ -147,8 +190,10 @@ void slist_debug() {
     }
     for (i = 0; i < list.size; i++) {
         if (list.conn_array[i].sockfd != NULL_SOCKET) {
-            printf("<%d> <%s>\n", list.conn_array[i].sockfd,
-                   list.conn_array[i].address);
+            printf("<Socket: %d> <Addr_str: %s> <Addr: %s> <Port: %hu>\n",
+                   list.conn_array[i].sockfd, list.conn_array[i].address,
+                   inet_ntoa(list.conn_array[i].info.sin_addr),
+                   ntohs(list.conn_array[i].info.sin_port));
         }
     }
 }
@@ -156,10 +201,11 @@ void slist_debug() {
 
 int slist_close(int sockfd) {
 
+    if (slist_mode == SLIST_TCP_MODE)
+        return -1;
     ssize_t wt = write(sockfd, "Server is shutting down.", 23);
-    if (wt <= 0) {
+    if (wt <= 0)
         return 1;
-    }
     close(sockfd);
     return 0;
 }
@@ -168,9 +214,12 @@ int slist_close(int sockfd) {
 void slist_finalize() {
     int i;
     if (slist_is_set) {
-        for (i = 0; i < list.max_size; i++)
-            slist_close(list.conn_array[i].sockfd); // Close all sockets on list
+        if (slist_mode == SLIST_TCP_MODE) {
+            for (i = 0; i < list.max_size; i++)
+                slist_close(list.conn_array[i].sockfd); // Close all sockets
+        }
         free(list.conn_array);
         slist_is_set = 0;
+        slist_mode = -1;
     }
 }
