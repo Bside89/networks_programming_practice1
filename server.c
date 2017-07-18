@@ -50,7 +50,8 @@ void* writer_handler(void *arg);
 
 void accept_connections_handler(int listen_socket);
 
-void send_unit_message(int sockfd, char *str);
+void send_unit_message(int sockfd, char *str, struct sockaddr_in *client,
+                       socklen_t *clilen);
 
 int locate_addressee(char *srvaddr, char (*msgbuffer)[LOG_BUFFER_SIZE],
                        char (*address)[SLIST_ADDR_MAX_SIZE]);
@@ -94,7 +95,7 @@ int main(int argc, char** argv) {
     // Get socket from system
     sockfd = socket(AF_INET, netopt_get_transport_protocol(), 0);
     if (sockfd < 0) {
-        perror("socket");
+        perror("main: socket");
         exit(EXIT_FAILURE);
     }
 
@@ -115,7 +116,7 @@ int main(int argc, char** argv) {
 
     // Bind address to socket
     if (bind(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
-        perror("bind");
+        perror("main: bind");
         exit(EXIT_FAILURE);
     }
 
@@ -133,7 +134,7 @@ int main(int argc, char** argv) {
 
     // Initialize pipe communication between reader and writer
     if (pipe(rwh_pipe) < 0) {
-        perror("pipe");
+        perror("main: pipe");
         exit(EXIT_FAILURE);
     }
 
@@ -141,7 +142,7 @@ int main(int argc, char** argv) {
     if (netopt_get_parallelism_mode() == MULTIPROCESSING_MODE) {
         pid = fork();
         if (pid < 0) {
-            perror("fork");
+            perror("main: fork");
             exit(EXIT_FAILURE);
         }
         if (pid == 0) { // Child process (for writing handler)
@@ -149,14 +150,16 @@ int main(int argc, char** argv) {
             writer_handler((void*) server_address);
             return EXIT_SUCCESS;
         } else {
-            // TODO use shared memory to grant access (in child process) to slist
+            // There are a bug here: child process can't access same slist
+            // allocated in the father process.
+            // TODO use shared memory (shmget or mmap) to fix memory bug with fork
             close(rwh_pipe[0]); // Reader handler will not read nothing
         }
     } else {
         // New thread (for writing handler)
         if (pthread_create(&(threads[0]), NULL, writer_handler,
                            (void*) server_address) < 0) {
-            perror("pthread_create");
+            perror("main: pthread_create");
             exit(EXIT_FAILURE);
         }
     }
@@ -206,24 +209,25 @@ void accept_connections_handler(int listen_socket) {
     int newsockfd = accept(listen_socket, (struct sockaddr*) &cli_addr,
                        (unsigned int*) &clilen);
     if (newsockfd < 0) {
-        perror("accept");
+        perror("accept_connections_handler: accept");
         exit(EXIT_FAILURE);
     }
 
     // Fill data to insert in connection's list
     addr_wrapper(&address, cli_addr);
 
+    memset((char*) &s, 0, sizeof(s));
+
     // Insert into list
     if (slist_push(newsockfd, cli_addr) == SLIST_MAX_SIZE_REACHED) {
-        send_unit_message(newsockfd,
-                          "Max connections reached. Connection refused.\n");
+        strcpy(s.log, "Max connections reached. Connection refused.\n");
+        send_unit_message(newsockfd, s.log, &cli_addr, (socklen_t *) &clilen);
         return;
     }
 
     FD_SET(newsockfd, &active_sockets);
 
     // Fill log_buffer to format message
-    memset((char*) &s, 0, sizeof(s));
     s.sockfd = NULL_SOCKET;
     printf(client_logon_message(&s.log, slist_get_address_by_socket(newsockfd)));
 
@@ -262,7 +266,7 @@ void* writer_handler(void *arg) {
                                 (struct sockaddr *) &c->info,
                                 (socklen_t) c->infolen);
             if (wt < 0) {
-                perror("read");
+                perror("writer_handler: read");
                 exit(EXIT_FAILURE);
             } else if (wt == 0) {
                 puts("Client not found or not connected (error on write).");
@@ -292,7 +296,7 @@ void* reader_handler(void *arg) {
     ssize_t rd = recvfrom(s.sockfd, s.log, sizeof(s.log), 0,
                           (struct sockaddr *) &s.client, (socklen_t *) &s.clilen);
     if (rd < 0) {
-        perror("read");
+        perror("reader_handler: read");
         exit(EXIT_FAILURE);
     } else if (rd == 0) { // Client has logged out
         if (netopt_get_transport_protocol() == SOCK_STREAM) { // TCP
@@ -305,7 +309,11 @@ void* reader_handler(void *arg) {
     if (netopt_get_transport_protocol() == SOCK_DGRAM) {
         printf("Received packet from: %s:%hu\n",
                inet_ntoa(s.client.sin_addr), ntohs(s.client.sin_port));
-        slist_push(s.sockfd, s.client);
+        if (slist_push(s.sockfd, s.client) == SLIST_MAX_SIZE_REACHED) {
+            strcpy(s.log, "Max connections reached. Connection refused.\n");
+            send_unit_message(s.sockfd, s.log, &s.client, (socklen_t *) &s.clilen);
+            return NULL;
+        }
     }
     printf(s.log);
     if (netopt_get_chatmode() == GROUP_MODE) {
@@ -316,16 +324,20 @@ void* reader_handler(void *arg) {
 }
 
 
-void send_unit_message(int sockfd, char *str) {
+void send_unit_message(int sockfd, char *str,
+                       struct sockaddr_in *client, socklen_t *clilen) {
 
-    ssize_t wd = write(sockfd, str, sizeof(str));
+    ssize_t wd = sendto(sockfd, str, LOG_BUFFER_SIZE, 0, (struct sockaddr *) client,
+                        *clilen);
     if (wd < 0) {
-        perror("write");
+        perror("send_unit_message: write");
         exit(EXIT_FAILURE);
     } else if (wd == 0) {
-        int n = slist_pop(sockfd); // Close occurs here
-        assert(n == SLIST_OK);
-        FD_CLR(sockfd, &active_sockets);
+        if (netopt_get_transport_protocol() == SOCK_STREAM) { // TCP
+            int n = slist_pop(sockfd); // Close occurs here
+            assert(n == SLIST_OK);
+            FD_CLR(sockfd, &active_sockets);
+        }
     }
 }
 
