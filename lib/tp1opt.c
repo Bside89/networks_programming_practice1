@@ -34,7 +34,7 @@ void netopt_debug();
 int netopt_is_option_valid(int mode);
 
 
-int netopt_set(int argc, char **argv, int is_server) {
+int netopt_set(int argc, char **argv, int is_server, int debug_flag) {
 
     int c, qty, index;
     const char* options;
@@ -48,10 +48,12 @@ int netopt_set(int argc, char **argv, int is_server) {
     // Defaults
     options = (netconf.is_server) ? GETOPT_OPTIONS_SERVER : GETOPT_OPTIONS_CLIENT;
 
-    netconf.chat_mode_opt = GROUP_MODE;
+    if (is_server)
+        netconf.chat_mode_opt = GROUP_MODE;
+    else
+        netconf.interr_opt = INT_MODE_ENTER;
     netconf.parallelism_mode_opt = MULTIPROCESSING_MODE;
     netconf.transport_protocol_opt = SOCK_STREAM; // TCP
-    netconf.interr_opt = INT_MODE_ENTER;
 
     opterr = 0;
 
@@ -146,7 +148,7 @@ int netopt_set(int argc, char **argv, int is_server) {
                     OPT_PORT);
             return -1;
         } else if (!mc_set) {
-            fprintf(stderr, "Max connections (option '-%c') is required for server.\n",
+            fprintf(stderr, "Max connections (option '-%c') is required.\n",
                     OPT_MAX_CONNECTIONS);
             return -1;
         }
@@ -169,8 +171,8 @@ int netopt_set(int argc, char **argv, int is_server) {
             return -1;
         }
     }
-    netopt_debug();
     netopt_is_set = 1;
+    if (debug_flag) netopt_debug();
 
     return 0;
 }
@@ -250,17 +252,17 @@ void netopt_debug() {
     printf("Application started in %s mode.\n",
            (netconf.is_server) ? "Server" : "Client");
     printf("%s mode is used.\n",
-           (netconf.chat_mode_opt == UNIQUE_MODE) ? "Unique" : "Group");
-    printf("%s mode is used.\n",
             (netconf.parallelism_mode_opt == MULTITHREADING_MODE) ?
             "Multithreading" : "Multiprocessing");
     printf("%s protocol is used.\n",
            (netconf.transport_protocol_opt == SOCK_DGRAM) ? "UDP" : "TCP");
     if (netconf.is_server) {
+        printf("%s mode is used.\n",
+               (netconf.chat_mode_opt == UNIQUE_MODE) ? "Unique" : "Group");
         printf("Max connections: %d.\n", netconf.max_connections_opt);
     } else {
         printf("Interruption: \"%s\" is used.\n", netconf.interr_opt);
-        printf("IP %s is used.\n", netconf.ip_address);
+        printf("IP (from server) %s is used.\n", netconf.ip_address);
     }
     printf("Port %d is used.\n", netconf.connection_port);
 

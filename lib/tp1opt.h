@@ -40,7 +40,7 @@
 #define NETOPT_OPTIONS_NOT_SET -2
 
 
-int netopt_set(int argc, char **argv, int is_server);
+int netopt_set(int argc, char **argv, int is_server, int debug_flag);
 
 int netopt_is_server();
 

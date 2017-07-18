@@ -74,7 +74,7 @@ void print_n_close(char *str);
  */
 int main(int argc, char** argv) {
 
-    if (netopt_set(argc, argv, 1) < 0) { // Get (allocate) all configs by user
+    if (netopt_set(argc, argv, 1, 1) < 0) { // Get (allocate) all configs by user
         fprintf(stderr, "Exiting.\n");
         exit(EXIT_FAILURE);
     }
@@ -296,10 +296,10 @@ void* reader_handler(void *arg) {
         exit(EXIT_FAILURE);
     } else if (rd == 0) { // Client has logged out
         if (netopt_get_transport_protocol() == SOCK_STREAM) { // TCP
+            client_logout_message(&s.log, slist_get_address_by_socket(s.sockfd));
             n = slist_pop(s.sockfd); // Close occurs here
             assert(n == SLIST_OK);
             FD_CLR(s.sockfd, &active_sockets);
-            client_logout_message(&s.log, slist_get_address_by_socket(s.sockfd));
         }
     }
     if (netopt_get_transport_protocol() == SOCK_DGRAM) {
