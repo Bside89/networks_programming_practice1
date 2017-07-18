@@ -149,6 +149,7 @@ int main(int argc, char** argv) {
             writer_handler((void*) server_address);
             return EXIT_SUCCESS;
         } else {
+            // TODO use shared memory to grant access (in child process) to slist
             close(rwh_pipe[0]); // Reader handler will not read nothing
         }
     } else {
@@ -252,14 +253,11 @@ void* writer_handler(void *arg) {
                 puts("Message not send due to incorrect format.");
                 continue;
             }
-            puts(addr);
-            slist_debug();
             c = slist_get_by_address(addr);
             if (c == NULL) {
                 puts("Client not found or not connected (error on get socket).");
                 continue;
             }
-            // TODO arrumar saporra aqui
             ssize_t wt = sendto(c->sockfd, s.log, sizeof(s.log), 0,
                                 (struct sockaddr *) &c->info,
                                 (socklen_t) c->infolen);
@@ -305,9 +303,10 @@ void* reader_handler(void *arg) {
         }
     }
     if (netopt_get_transport_protocol() == SOCK_DGRAM) {
+        printf("Received packet from: %s:%hu\n",
+               inet_ntoa(s.client.sin_addr), ntohs(s.client.sin_port));
         slist_push(s.sockfd, s.client);
     }
-    slist_debug();
     printf(s.log);
     if (netopt_get_chatmode() == GROUP_MODE) {
         write(rwh_pipe[1], (char*) &s, sizeof(s));
