@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 #include <assert.h>
+#include <netdb.h>
 #include "lib/tp1opt.h"
 #include "lib/slist.h"
 #include "lib/srvutils.h"
@@ -29,8 +30,9 @@ int rwh_pipe[2];
 
 
 /* **************************************** */
-/* Functions used */
+/* Structs used */
 
+// Reader-writer handlers packet: Contain info communicated between handlers
 struct rwh_packet {
     int sockfd;
     char log[LOG_BUFFER_SIZE];
@@ -83,7 +85,7 @@ int main(int argc, char** argv) {
     pthread_t threads[2];
     struct sockaddr_in serv_addr, my_addr;
     int sockfd;
-    int i, len = sizeof(struct sockaddr);
+    int i, optval = 1, len = sizeof(struct sockaddr);
     char server_address[SLIST_ADDR_MAX_SIZE];
 
     signal(SIGINT, sigint_handler);     // Signal handler for SIGINT
@@ -100,6 +102,10 @@ int main(int argc, char** argv) {
     FD_ZERO(&active_sockets);
 
     FD_SET(sockfd, &active_sockets); // Insert listen socket to set
+
+    // Remove the time to wait after closing server
+    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR,
+               (const void*) &optval, sizeof(int));
 
     // Fill the server (serv_addr) struct
     memset((char*) &serv_addr, 0, sizeof(serv_addr)); // Zero the struct
@@ -149,7 +155,7 @@ int main(int argc, char** argv) {
         if (pid == 0) { // Child process (for writing handler)
             close(rwh_pipe[1]); // Writer handler will not write nothing
             writer_handler((void*) server_address);
-            return 0;
+            return EXIT_SUCCESS;
         } else {
             close(rwh_pipe[0]); // Reader handler will not read nothing
         }
@@ -190,7 +196,7 @@ int main(int argc, char** argv) {
 
     puts("Bye!");
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 
@@ -268,7 +274,7 @@ void* writer_handler(void *arg) {
         } else { // Receive message from reader
 
             if (read(rwh_pipe[0], (char*) &s, sizeof(s)) > 0)
-                slist_sendall(s.log, s.sockfd);
+                slist_sendall(s.log, s.sockfd); // Pass along the message to clients
         }
     }
     return NULL;
@@ -278,6 +284,8 @@ void* writer_handler(void *arg) {
 void* reader_handler(void *arg) {
 
     struct rwh_packet s;
+    struct sockaddr_in client;
+    int clilen = sizeof(client);
     char *address;
 
     memset((char*) &s, 0, sizeof(s));
@@ -285,7 +293,9 @@ void* reader_handler(void *arg) {
     s.sockfd = *((int*) arg);
     address = slist_get_address_by_socket(s.sockfd);
 
-    ssize_t rd = read(s.sockfd, s.log, sizeof(s.log));
+    ssize_t rd = recvfrom(s.sockfd, s.log, sizeof(s.log), 0, (struct sockaddr*)
+            &client, (socklen_t *) &clilen);
+    //ssize_t rd = read(s.sockfd, s.log, sizeof(s.log));
     if (rd < 0) {
         perror("read");
         exit(EXIT_FAILURE);
@@ -295,6 +305,9 @@ void* reader_handler(void *arg) {
         FD_CLR(s.sockfd, &active_sockets);
         client_logout_message(&s.log, address);
     }
+
+    printf("Mensagem recebida de: [%s:%hu]\n",
+           inet_ntoa(client.sin_addr), ntohs(client.sin_port));
     printf(s.log);
     if (netopt_get_chatmode() == GROUP_MODE) {
         write(rwh_pipe[1], (char*) &s, sizeof(s));
@@ -322,7 +335,6 @@ int locate_addressee(char *srvaddr, char (*msgbuffer)[LOG_BUFFER_SIZE],
                        char (*address)[SLIST_ADDR_MAX_SIZE]) {
 
     char *init = NULL, *end = NULL;
-    char space = ' ';
     char localbuffer[LOG_BUFFER_SIZE];
 
     if (strstr(*msgbuffer, SEND_MSG_CMD) != *msgbuffer)
@@ -332,10 +344,10 @@ int locate_addressee(char *srvaddr, char (*msgbuffer)[LOG_BUFFER_SIZE],
     memset(address, 0, sizeof(*address));
     strcpy(localbuffer, *msgbuffer);
 
-    init = strchr(localbuffer, space);
+    init = strchr(localbuffer, CMD_DELIMITER);
     if (init == NULL)
         return -1;
-    end = strchr(++init, space);
+    end = strchr(++init, CMD_DELIMITER);
     if (end == NULL)
         return -1;
     size_t addrsize = strlen(init) - strlen(++end) - 1;

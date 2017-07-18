@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
     close(sockfd);
     sleep(1);
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 
