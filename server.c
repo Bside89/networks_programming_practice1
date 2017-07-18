@@ -8,10 +8,8 @@
 #include <pthread.h>
 #include <arpa/inet.h>
 #include <assert.h>
-#include <netdb.h>
 #include "lib/tp1opt.h"
 #include "lib/slist.h"
-#include "lib/srvutils.h"
 
 
 // Flag that indicate if it is time to shutdown (switched by signal handler)
@@ -240,6 +238,7 @@ void* writer_handler(void *arg) {
     char addr[SLIST_ADDR_MAX_SIZE];
     char *retvalue;
     char *server_address = (char*) arg;
+    conn_t* c;
 
     while (!is_exit) {
 
@@ -255,14 +254,15 @@ void* writer_handler(void *arg) {
             }
             puts(addr);
             slist_debug();
-            s.sockfd = slist_get_socket_by_address(addr);
-            if (s.sockfd == NULL_SOCKET) {
+            c = slist_get_by_address(addr);
+            if (c == NULL) {
                 puts("Client not found or not connected (error on get socket).");
                 continue;
             }
-            ssize_t wt = sendto(s.sockfd, s.log, sizeof(s.log), 0,
-                                (struct sockaddr *) &s.client,
-                                (socklen_t) s.clilen);
+            // TODO arrumar saporra aqui
+            ssize_t wt = sendto(c->sockfd, s.log, sizeof(s.log), 0,
+                                (struct sockaddr *) &c->info,
+                                (socklen_t) c->infolen);
             if (wt < 0) {
                 perror("read");
                 exit(EXIT_FAILURE);

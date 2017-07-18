@@ -19,12 +19,12 @@ arpa/inet.h
 -
 slist.h
 /home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/slist.h
-srvutils.h
-/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/srvutils.h
 
 /home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/slist.h
 netinet/in.h
 -
+srvutils.h
+/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/srvutils.h
 
 /home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/srvutils.c
 string.h
@@ -79,12 +79,8 @@ arpa/inet.h
 -
 assert.h
 -
-netdb.h
--
 lib/tp1opt.h
 /home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/tp1opt.h
 lib/slist.h
 /home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/slist.h
-lib/srvutils.h
-/home/darkwolf/AllFiles/Faculdade/Season 6/Lab Redes/Atividades/TP1/lib/srvutils.h
 

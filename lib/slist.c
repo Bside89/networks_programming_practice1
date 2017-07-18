@@ -8,15 +8,6 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include "slist.h"
-#include "srvutils.h"
-
-
-typedef struct connection {
-    int sockfd;
-    struct sockaddr_in info;
-    int infolen;
-    char address[SLIST_ADDR_MAX_SIZE];
-} conn_t;
 
 
 typedef struct _slist {
@@ -125,13 +116,21 @@ char* slist_get_address_by_socket(int sockfd) {
 
 
 int slist_get_socket_by_address(char *address) {
+    conn_t *rec = slist_get_by_address(address);
+    if (rec == NULL)
+        return NULL_SOCKET;
+    return rec->sockfd;
+}
+
+
+conn_t* slist_get_by_address(char* address) {
     int i;
     for (i = 0; i < list.max_size; i++) {
         if (strcmp(address, list.conn_array[i].address) == 0) {
-            return list.conn_array[i].sockfd;
+            return &list.conn_array[i];
         }
     }
-    return NULL_SOCKET;
+    return NULL;
 }
 
 

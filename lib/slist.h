@@ -6,6 +6,7 @@
 #define TP1_SLIST_H
 
 #include <netinet/in.h>
+#include "srvutils.h"
 
 #define NULL_SOCKET -1
 #define NULL_ADDRESS ""
@@ -22,6 +23,14 @@
 #define SLIST_INVALID_ELEMENT 6
 
 
+typedef struct connection {
+    int sockfd;
+    struct sockaddr_in info;
+    int infolen;
+    char address[SLIST_ADDR_MAX_SIZE];
+} conn_t;
+
+
 int slist_start(size_t size, int mode);
 
 int slist_push(int sockfd, struct sockaddr_in info);
@@ -33,6 +42,8 @@ int slist_isset_by_sockaddr(struct sockaddr_in client);
 char* slist_get_address_by_socket(int sockfd);
 
 int slist_get_socket_by_address(char *address);
+
+conn_t* slist_get_by_address(char* address);
 
 unsigned long int slist_size();
 
