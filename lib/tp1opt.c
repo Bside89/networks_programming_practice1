@@ -15,10 +15,11 @@
 typedef struct netsettings {
     int is_server;                  // Flag indicating server or client app;
     int chat_mode_opt;              // Chat mode (UNIQUE or GROUP) (S.O.);
-    int parallelism_mode_opt;       // Par. mode (MULTIPROCESS or MULTITHREADING);
+    int parallelism_mode_opt;       // Par. mode (fork process or thread) (C.O.);
     int transport_protocol_opt;     // Transport protocl used (TCP or UDP);
     int connection_port;            // Port number used;
     int max_connections_opt;        // Max number of connections accepted (S.O.);
+    int debug_opt;                  // Debug mode flag;
     char* interr_opt;               // Interruption for sending messages (C.O.);
     char* ip_address;               // IPv4 address (C.O.);
 } net_opts;
@@ -34,11 +35,12 @@ void netopt_debug();
 int netopt_is_option_valid(int mode);
 
 
-int netopt_set(int argc, char **argv, int is_server, int debug_flag) {
+int netopt_set(int argc, char **argv, int is_server) {
 
     int c, qty, index;
     const char* options;
-    short cm_set = 0, pm_set = 0, tp_set = 0, cp_set = 0, mc_set = 0, io_set = 0;
+    short cm_set = 0, pm_set = 0, tp_set = 0, cp_set = 0, mc_set = 0, io_set = 0,
+            db_set = 0;
 
     if (netopt_is_set)
         return -1;
@@ -50,10 +52,12 @@ int netopt_set(int argc, char **argv, int is_server, int debug_flag) {
 
     if (is_server)
         netconf.chat_mode_opt = GROUP_MODE;
-    else
+    else {
         netconf.interr_opt = INT_MODE_ENTER;
-    netconf.parallelism_mode_opt = MULTIPROCESSING_MODE;
-    netconf.transport_protocol_opt = SOCK_STREAM; // TCP
+        netconf.parallelism_mode_opt = FORK_MODE;
+    }
+    netconf.transport_protocol_opt = SOCK_STREAM;   // TCP
+    netconf.debug_opt = 0;                          // Debug deactived
 
     opterr = 0;
 
@@ -74,7 +78,7 @@ int netopt_set(int argc, char **argv, int is_server, int debug_flag) {
             case OPT_FORK:
                 if (!netopt_is_option_valid(pm_set))
                     return -1;
-                netconf.parallelism_mode_opt = MULTIPROCESSING_MODE;
+                netconf.parallelism_mode_opt = FORK_MODE;
                 pm_set = 1;
                 break;
             case OPT_THREAD:
@@ -132,6 +136,12 @@ int netopt_set(int argc, char **argv, int is_server, int debug_flag) {
                 netconf.interr_opt = optarg;
                 io_set = 1;
                 break;
+            case OPT_DEBUG:
+                if (!netopt_is_option_valid(db_set))
+                    return -1;
+                netconf.debug_opt = 1;
+                db_set = 1;
+                break;
             case '?':
                 if (isprint (optopt))
                     fprintf(stderr, "Unknown option '-%c'.\n", optopt);
@@ -172,7 +182,8 @@ int netopt_set(int argc, char **argv, int is_server, int debug_flag) {
         }
     }
     netopt_is_set = 1;
-    if (debug_flag) netopt_debug();
+    if (netconf.debug_opt)
+        netopt_debug();
 
     return 0;
 }
@@ -185,6 +196,13 @@ int netopt_is_server() {
 }
 
 
+int netopt_is_debug_mode() {
+    if (!netopt_is_set)
+        return NETOPT_OPTIONS_NOT_SET;
+    return netconf.debug_opt;
+}
+
+
 int netopt_get_chatmode() {
     if (!netopt_is_set)
         return NETOPT_OPTIONS_NOT_SET;
@@ -194,7 +212,7 @@ int netopt_get_chatmode() {
 }
 
 
-int netopt_get_parallelism_mode() {
+int netopt_get_multiprocessing_mode() {
     if (!netopt_is_set)
         return NETOPT_OPTIONS_NOT_SET;
     return netconf.parallelism_mode_opt;
@@ -249,11 +267,11 @@ int netopt_is_option_valid(int mode) {
 
 void netopt_debug() {
 
+    puts("***************");
+    puts("NETOPT'S SETTINGS");
+    puts("***************");
     printf("Application started in %s mode.\n",
            (netconf.is_server) ? "Server" : "Client");
-    printf("%s mode is used.\n",
-            (netconf.parallelism_mode_opt == MULTITHREADING_MODE) ?
-            "Multithreading" : "Multiprocessing");
     printf("%s protocol is used.\n",
            (netconf.transport_protocol_opt == SOCK_DGRAM) ? "UDP" : "TCP");
     if (netconf.is_server) {
@@ -261,11 +279,14 @@ void netopt_debug() {
                (netconf.chat_mode_opt == UNIQUE_MODE) ? "Unique" : "Group");
         printf("Max connections: %d.\n", netconf.max_connections_opt);
     } else {
+        printf("%s mode is used.\n",
+               (netconf.parallelism_mode_opt == MULTITHREADING_MODE) ?
+               "Multithreading" : "Multiprocessing");
         printf("Interruption: \"%s\" is used.\n", netconf.interr_opt);
         printf("IP (from server) %s is used.\n", netconf.ip_address);
     }
     printf("Port %d is used.\n", netconf.connection_port);
-
+    puts("***************");
 }
 
 

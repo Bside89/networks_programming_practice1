@@ -75,15 +75,14 @@ void print_n_close(char *str);
  */
 int main(int argc, char** argv) {
 
-    if (netopt_set(argc, argv, 1, 1) < 0) { // Get (allocate) all configs by user
+    if (netopt_set(argc, argv, 1) < 0) { // Get (allocate) all configs by user
         fprintf(stderr, "Exiting.\n");
         exit(EXIT_FAILURE);
     }
 
     // Vars initialization
     fd_set read_sockets;
-    pid_t pid;
-    pthread_t threads[2];
+    pthread_t wh_thread;
     struct sockaddr_in serv_addr;
     int sockfd;
     int i, optval = 1, n;
@@ -138,30 +137,11 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
 
-    // Bifurcation (fork or thread)
-    if (netopt_get_parallelism_mode() == MULTIPROCESSING_MODE) {
-        pid = fork();
-        if (pid < 0) {
-            perror("main: fork");
-            exit(EXIT_FAILURE);
-        }
-        if (pid == 0) { // Child process (for writing handler)
-            close(rwh_pipe[1]); // Writer handler will not write nothing
-            writer_handler((void*) server_address);
-            return EXIT_SUCCESS;
-        } else {
-            // There are a bug here: child process can't access same slist
-            // allocated in the father process.
-            // TODO use shared memory (shmget or mmap) to fix memory bug with fork
-            close(rwh_pipe[0]); // Reader handler will not read nothing
-        }
-    } else {
-        // New thread (for writing handler)
-        if (pthread_create(&(threads[0]), NULL, writer_handler,
-                           (void*) server_address) < 0) {
-            perror("main: pthread_create");
-            exit(EXIT_FAILURE);
-        }
+    // New thread (for writing handler)
+    if (pthread_create(&wh_thread, NULL, writer_handler,
+                       (void*) server_address) < 0) {
+        perror("main: pthread_create");
+        exit(EXIT_FAILURE);
     }
 
     // Main loop application (for reading and accept handlers)
@@ -186,9 +166,9 @@ int main(int argc, char** argv) {
             }
         }
     }
-    close(sockfd);
     slist_finalize();   // Free allocated memory to slist
     netopt_unset();     // Free allocated memory to netopt
+    close(sockfd);
 
     puts("Bye!");
 
@@ -231,9 +211,11 @@ void accept_connections_handler(int listen_socket) {
     s.sockfd = NULL_SOCKET;
     printf(client_logon_message(&s.log, slist_get_address_by_socket(newsockfd)));
 
+    if (netopt_is_debug_mode())
+        slist_debug();
+
     if (netopt_get_chatmode() == GROUP_MODE) // Send message to writer
         write(rwh_pipe[1], (char*) &s, sizeof(s));
-
 }
 
 
@@ -301,9 +283,12 @@ void* reader_handler(void *arg) {
     } else if (rd == 0) { // Client has logged out
         if (netopt_get_transport_protocol() == SOCK_STREAM) { // TCP
             client_logout_message(&s.log, slist_get_address_by_socket(s.sockfd));
-            n = slist_pop(s.sockfd); // Close occurs here
+            n = slist_pop_by_socket(s.sockfd); // Close occurs here
             assert(n == SLIST_OK);
             FD_CLR(s.sockfd, &active_sockets);
+        } else {
+            n = slist_pop_by_addr(s.client);
+            assert(n == SLIST_OK);
         }
     }
     if (netopt_get_transport_protocol() == SOCK_DGRAM) {
@@ -314,6 +299,8 @@ void* reader_handler(void *arg) {
             send_unit_message(s.sockfd, s.log, &s.client, (socklen_t *) &s.clilen);
             return NULL;
         }
+        if (netopt_is_debug_mode())
+            slist_debug();
     }
     printf(s.log);
     if (netopt_get_chatmode() == GROUP_MODE) {
@@ -334,7 +321,7 @@ void send_unit_message(int sockfd, char *str,
         exit(EXIT_FAILURE);
     } else if (wd == 0) {
         if (netopt_get_transport_protocol() == SOCK_STREAM) { // TCP
-            int n = slist_pop(sockfd); // Close occurs here
+            int n = slist_pop_by_socket(sockfd); // Close occurs here
             assert(n == SLIST_OK);
             FD_CLR(sockfd, &active_sockets);
         }

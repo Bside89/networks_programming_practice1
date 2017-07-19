@@ -9,14 +9,14 @@
 
 // Options (getopt)
 
-#define GETOPT_OPTIONS_SERVER "ugftp:m:l:"
-#define GETOPT_OPTIONS_CLIENT "ftm:s:"
+#define GETOPT_OPTIONS_SERVER "ugp:m:l:d"
+#define GETOPT_OPTIONS_CLIENT "ftm:s:d"
 
-#define OPT_UNIQUE 'u'              // Unique mode;
-#define OPT_GROUP 'g'               // Group mode (default);
+#define OPT_UNIQUE 'u'              // Unique mode (SERVER ONLY);
+#define OPT_GROUP 'g'               // Group mode (default) (SERVER ONLY);
 
-#define OPT_FORK 'f'                // Fork process mode (default);
-#define OPT_THREAD 't'              // Thread mode;
+#define OPT_FORK 'f'                // Fork process mode (default) (CLIENT ONLY);
+#define OPT_THREAD 't'              // Thread mode (CLIENT ONLY);
 
 #define OPT_PROTOCOL_MODE 'm'       // Transport protocol used, which can be:
 #define PROT_MODE_UDP "udp"             // UDP;
@@ -31,22 +31,26 @@
 #define INT_MODE_ENTER "enter"          // Enter key;
 #define INT_MODE_INTER "inter"          // Interuption key defined;
 
+#define OPT_DEBUG 'd'               // Start in debug mode
+
 #define UNIQUE_MODE 0
 #define GROUP_MODE 1                // Default
-#define MULTIPROCESSING_MODE 0      // Default
+#define FORK_MODE 0                 // Default
 #define MULTITHREADING_MODE 1
 
 #define NETOPT_OPTION_NOT_VALID -1
 #define NETOPT_OPTIONS_NOT_SET -2
 
 
-int netopt_set(int argc, char **argv, int is_server, int debug_flag);
+int netopt_set(int argc, char **argv, int is_server);
 
 int netopt_is_server();
 
+int netopt_is_debug_mode();
+
 int netopt_get_chatmode();
 
-int netopt_get_parallelism_mode();
+int netopt_get_multiprocessing_mode();
 
 int netopt_get_transport_protocol();
 

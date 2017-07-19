@@ -24,7 +24,7 @@ int slist_mode = -1; // Protocol (TCP or UDP), -1 for not set
 int slist_is_set = 0; // Flag indicating if settings are (or not) set
 
 
-int slist_close(int sockfd);
+int slist_close(int sockfd, struct sockaddr_in *client, socklen_t clilen);
 
 
 int slist_start(size_t size, int mode) {
@@ -87,16 +87,36 @@ int slist_isset_by_sockaddr(struct sockaddr_in client) {
 }
 
 
-int slist_pop(int sockfd) {
+int slist_pop_by_socket(int sockfd) {
     int i;
+    conn_t *c;
     if (list.size == 0)
         return SLIST_EMPTY;
     for (i = 0; i < list.max_size; i++) {
-        if (list.conn_array[i].sockfd == sockfd) {
-            list.conn_array[i].sockfd = NULL_SOCKET;
+        c = &list.conn_array[i];
+        if (c->sockfd == sockfd) {
+            c->sockfd = NULL_SOCKET;
             list.size--;
-            if (slist_mode == SLIST_TCP_MODE)
-                slist_close(sockfd); // Close socket (only TCP)
+            slist_close(c->sockfd, &c->info, (socklen_t) c->infolen);
+            break;
+        }
+    }
+    return SLIST_OK;
+}
+
+
+int slist_pop_by_addr(struct sockaddr_in client) {
+    int i;
+    conn_t *c;
+    if (list.size == 0)
+        return SLIST_EMPTY;
+    for (i = 0; i < list.max_size; i++) {
+        c = &list.conn_array[i];
+        if (c->info.sin_addr.s_addr == client.sin_addr.s_addr &&
+                c->info.sin_port == client.sin_port) {
+            c->sockfd = NULL_SOCKET;
+            list.size--;
+            slist_close(c->sockfd, &c->info, (socklen_t) c->infolen);
             break;
         }
     }
@@ -149,6 +169,7 @@ int slist_sendall(char *msg, int sender, struct sockaddr_in sender_info) {
     int i;
     char log_buffer[LOG_BUFFER_SIZE];
     conn_t *c;
+    ssize_t st;
 
     memset(&log_buffer, 0, sizeof(log_buffer));
     strcpy(log_buffer, msg);
@@ -167,9 +188,12 @@ int slist_sendall(char *msg, int sender, struct sockaddr_in sender_info) {
         } else {                            // UDP Protocol
             if (c->info.sin_addr.s_addr != sender_info.sin_addr.s_addr ||
                     c->info.sin_port != sender_info.sin_port) {
-                sendto(c->sockfd, log_buffer, sizeof(log_buffer), 0,
+                st = sendto(c->sockfd, log_buffer, sizeof(log_buffer), 0,
                        (struct sockaddr *) &c->info,
                        (socklen_t) c->infolen);
+                if (st == 0) { // Client no more active
+                    slist_pop_by_addr(c->info);
+                }
             }
         }
     }
@@ -178,7 +202,11 @@ int slist_sendall(char *msg, int sender, struct sockaddr_in sender_info) {
 
 
 void slist_debug() {
+
     int i;
+    puts("***************");
+    puts("SLIST'S SETTINGS");
+    puts("***************");
     if (!slist_is_set) {
         puts("This list is null.");
         return;
@@ -187,6 +215,9 @@ void slist_debug() {
         puts("This list is empty.");
         return;
     }
+    printf("Transport protocol used: %s\n",
+           slist_mode == SLIST_TCP_MODE ? "TCP" : "UDP");
+    puts("Active clients:");
     for (i = 0; i < list.size; i++) {
         if (list.conn_array[i].sockfd != NULL_SOCKET) {
             printf("<Socket: %d> <Addr_str: %s> <Addr: %s> <Port: %hu>\n",
@@ -195,30 +226,33 @@ void slist_debug() {
                    ntohs(list.conn_array[i].info.sin_port));
         }
     }
+    puts("***************");
 }
 
 
-int slist_close(int sockfd) {
+int slist_close(int sockfd, struct sockaddr_in *client, socklen_t clilen) {
 
+    const char *msg = "Server is shutting down.";
+
+    sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr *) client, clilen);
     if (slist_mode == SLIST_TCP_MODE)
-        return -1;
-    ssize_t wt = write(sockfd, "Server is shutting down.", 23);
-    if (wt <= 0)
-        return 1;
-    close(sockfd);
+        close(sockfd); // Close socket only in TCP
     return 0;
 }
 
 
 void slist_finalize() {
     int i;
-    if (slist_is_set) {
-        if (slist_mode == SLIST_TCP_MODE) {
-            for (i = 0; i < list.max_size; i++)
-                slist_close(list.conn_array[i].sockfd); // Close all sockets
-        }
-        free(list.conn_array);
-        slist_is_set = 0;
-        slist_mode = -1;
+    conn_t *c;
+    if (!slist_is_set)
+        return;
+    for (i = 0; i < list.max_size; i++) {
+        c = &list.conn_array[i];
+        if (c->sockfd != NULL_SOCKET)
+            // Close all sockets
+            slist_close(c->sockfd, &c->info, (socklen_t) c->infolen);
     }
+    free(list.conn_array);
+    slist_is_set = 0;
+    slist_mode = -1;
 }

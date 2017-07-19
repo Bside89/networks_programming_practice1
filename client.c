@@ -49,7 +49,7 @@ void print_n_close(char *str);
  */
 int main(int argc, char** argv) {
 
-    if (netopt_set(argc, argv, 0, 1) < 0) { // Get (allocate) all configs by user
+    if (netopt_set(argc, argv, 0) < 0) { // Get (allocate) all configs by user
         fprintf(stderr, "Exiting.\n");
         netopt_unset();
         exit(EXIT_FAILURE);
@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
     }
 
     // Bifurcation (fork or thread)
-    if (netopt_get_parallelism_mode() == MULTIPROCESSING_MODE) {
+    if (netopt_get_multiprocessing_mode() == FORK_MODE) {
         pid = fork();
         if (pid < 0) {
             perror("fork");

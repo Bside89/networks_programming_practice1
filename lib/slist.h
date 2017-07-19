@@ -35,7 +35,9 @@ int slist_start(size_t size, int mode);
 
 int slist_push(int sockfd, struct sockaddr_in info);
 
-int slist_pop(int sockfd);
+int slist_pop_by_socket(int sockfd);
+
+int slist_pop_by_addr(struct sockaddr_in client);
 
 int slist_isset_by_sockaddr(struct sockaddr_in client);
 
